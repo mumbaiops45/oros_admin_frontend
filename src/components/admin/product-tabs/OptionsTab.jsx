@@ -159,7 +159,7 @@ export default function OptionsTab({ productId }) {
                         ))}
                     </div>
 
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                         <input
                             placeholder="e.g. Red"
                             value={newValue[option._id]?.value || ""}
@@ -172,7 +172,7 @@ export default function OptionsTab({ productId }) {
                                     }
                                 }))
                             }
-                            className={inputClass}
+                            className={`${inputClass} min-w-0 flex-1`}
                         />
                         <input
                             type="number"
@@ -214,12 +214,12 @@ export default function OptionsTab({ productId }) {
                 </div>
             ))}
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <input
                     placeholder="Option name (e.g. Colour)"
                     value={optionName}
                     onChange={(e) => setOptionName(e.target.value)}
-                    className={inputClass}
+                    className={`${inputClass} min-w-0 flex-1`}
                 />
                 <select
                     value={optionType}

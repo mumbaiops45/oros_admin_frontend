@@ -134,7 +134,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="grid h-screen w-full grid-cols-1 overflow-hidden lg:grid-cols-2">
+        <div className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
             {/* Left — brand panel */}
             <div className="relative hidden flex-col items-center justify-center overflow-hidden bg-primary px-14 text-white lg:flex">
                 <div
@@ -166,7 +166,7 @@ export default function LoginPage() {
             </div>
 
             {/* Right — login form */}
-            <div className="relative flex flex-col items-center justify-center overflow-hidden bg-bg px-6 py-12">
+            <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-bg px-4 py-10 sm:px-6 sm:py-12">
                 <div
                     className="pointer-events-none absolute inset-0 opacity-[0.4]"
                     style={{
@@ -198,7 +198,7 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                <div className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-white p-8 shadow-xl shadow-primary/5 transition hover:shadow-2xl hover:shadow-primary/10">
+                <div className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-white p-6 shadow-xl shadow-primary/5 transition hover:shadow-2xl hover:shadow-primary/10 sm:p-8">
                     {step === "PHONE" ? (
                         <>
                             <div className="mb-6 flex items-center gap-2.5">
@@ -289,7 +289,7 @@ export default function LoginPage() {
                                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
                                         OTP code
                                     </label>
-                                    <div className="flex justify-between gap-2">
+                                    <div className="flex gap-1.5 sm:gap-2">
                                         {Array.from({ length: OTP_LENGTH }).map((_, index) => (
                                             <input
                                                 key={index}
@@ -306,7 +306,7 @@ export default function LoginPage() {
                                                 }
                                                 onKeyDown={(e) => handleOtpBoxKeyDown(index, e)}
                                                 onPaste={handleOtpPaste}
-                                                className="h-12 w-12 rounded-lg border border-border bg-white text-center text-lg font-semibold text-text outline-none transition focus:scale-105 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                                                className="aspect-square min-w-0 max-w-12 flex-1 rounded-lg border border-border bg-white text-center text-base font-semibold text-text outline-none transition focus:scale-105 focus:border-primary focus:ring-2 focus:ring-primary/15 sm:text-lg"
                                             />
                                         ))}
                                     </div>

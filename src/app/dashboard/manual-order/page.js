@@ -202,9 +202,9 @@ export default function ManualOrderPage() {
 
                     <div className="space-y-2">
                         {items.map((item, index) => (
-                            <div key={index} className="flex items-center gap-2">
+                            <div key={index} className="flex flex-wrap items-center gap-2">
                                 <select
-                                    className={`${inputClass} flex-1`}
+                                    className={`${inputClass} min-w-0 flex-1`}
                                     value={item.productId}
                                     onChange={(e) =>
                                         updateItem(index, "productId", e.target.value)

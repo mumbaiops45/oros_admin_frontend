@@ -109,7 +109,7 @@ export default function DetailsTab({ product, onSaved }) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField label="Name">
                     <input
                         className={inputClass}
@@ -129,7 +129,7 @@ export default function DetailsTab({ product, onSaved }) {
                 </FormField>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField label="Slug (auto)">
                     <input
                         className={inputClass}
@@ -153,7 +153,7 @@ export default function DetailsTab({ product, onSaved }) {
                 </FormField>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField label="Category">
                     <select
                         className={inputClass}
@@ -196,7 +196,7 @@ export default function DetailsTab({ product, onSaved }) {
                 </FormField>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField label="Tax rate %">
                     <input
                         type="number"
@@ -225,7 +225,7 @@ export default function DetailsTab({ product, onSaved }) {
                 </FormField>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField label="Min qty">
                     <input
                         type="number"

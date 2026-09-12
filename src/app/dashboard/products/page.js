@@ -116,8 +116,8 @@ export default function ProductsPage() {
 
     return (
         <div>
-            <div className="mb-5 flex items-center justify-between">
-                <div className="flex gap-2">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-2">
                     <button className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-text hover:bg-bg">
                         Sample .xlsx
                     </button>
@@ -135,100 +135,162 @@ export default function ProductsPage() {
                 </button>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">Name</th>
-                                <th className="px-5 py-3">SKU</th>
-                                <th className="px-5 py-3">Price</th>
-                                <th className="px-5 py-3">Category</th>
-                                <th className="px-5 py-3">Status</th>
-                                <th className="px-5 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-text-muted">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && error && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-red-500">
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && !error && products.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-text-muted">
-                                        No products yet
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading &&
-                                !error &&
-                                products.map((product) => (
-                                    <tr
-                                        key={product._id}
-                                        className="border-b border-border last:border-0"
-                                    >
-                                        <td className="px-5 py-3 font-semibold text-text">
-                                            {product.name}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {product.sku}
-                                        </td>
-                                        <td className="px-5 py-3 text-text">
-                                            {formatCurrency(product.basePrice)}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {categoryName(product)}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <Badge tone={STATUS_TONE[product.status] || "neutral"}>
-                                                {product.status}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEdit(product)}
-                                                    title="View"
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
-                                                >
-                                                    <Eye size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => openEdit(product)}
-                                                    title="Edit"
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
-                                                >
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(product)}
-                                                    title="Delete"
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
+            {isLoading && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    Loading...
                 </div>
+            )}
 
-                <div className="flex items-center justify-between border-t border-border px-5 py-3">
+            {!isLoading && error && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-red-500">
+                    {error}
+                </div>
+            )}
+
+            {!isLoading && !error && products.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    No products yet
+                </div>
+            )}
+
+            {!isLoading && !error && products.length > 0 && (
+                <>
+                    {/* Mobile: one card per product */}
+                    <div className="space-y-3 md:hidden">
+                        {products.map((product) => (
+                            <div
+                                key={product._id}
+                                className="rounded-2xl border border-border bg-card p-4"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="truncate font-semibold text-text">
+                                            {product.name}
+                                        </p>
+                                        <p className="text-xs text-text-muted">{product.sku}</p>
+                                    </div>
+                                    <Badge tone={STATUS_TONE[product.status] || "neutral"}>
+                                        {product.status}
+                                    </Badge>
+                                </div>
+
+                                <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Price
+                                        </p>
+                                        <p className="font-semibold text-text">
+                                            {formatCurrency(product.basePrice)}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Category
+                                        </p>
+                                        <p className="text-text-muted">{categoryName(product)}</p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 flex justify-end gap-2 border-t border-border pt-3">
+                                    <button
+                                        onClick={() => openEdit(product)}
+                                        title="View"
+                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                    >
+                                        <Eye size={14} />
+                                    </button>
+                                    <button
+                                        onClick={() => openEdit(product)}
+                                        title="Edit"
+                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(product)}
+                                        title="Delete"
+                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop / tablet: table */}
+                    <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">Name</th>
+                                        <th className="px-5 py-3">SKU</th>
+                                        <th className="px-5 py-3">Price</th>
+                                        <th className="px-5 py-3">Category</th>
+                                        <th className="px-5 py-3">Status</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {products.map((product) => (
+                                        <tr
+                                            key={product._id}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3 font-semibold text-text">
+                                                {product.name}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {product.sku}
+                                            </td>
+                                            <td className="px-5 py-3 text-text">
+                                                {formatCurrency(product.basePrice)}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {categoryName(product)}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <Badge tone={STATUS_TONE[product.status] || "neutral"}>
+                                                    {product.status}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => openEdit(product)}
+                                                        title="View"
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                                    >
+                                                        <Eye size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openEdit(product)}
+                                                        title="Edit"
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(product)}
+                                                        title="Delete"
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {!isLoading && !error && (
+                <div className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3">
                     <p className="text-xs text-text-muted">Page {page}</p>
                     <div className="flex gap-2">
                         <button
@@ -249,7 +311,7 @@ export default function ProductsPage() {
                         </button>
                     </div>
                 </div>
-            </div>
+            )}
 
             {isModalOpen && (
                 <ProductModal

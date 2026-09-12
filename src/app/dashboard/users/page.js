@@ -162,92 +162,135 @@ export default function UsersPage() {
                 </button>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">Name</th>
-                                <th className="px-5 py-3">Phone</th>
-                                <th className="px-5 py-3">Email</th>
-                                <th className="px-5 py-3">Role</th>
-                                <th className="px-5 py-3">Type</th>
-                                <th className="px-5 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-text-muted">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && error && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-red-500">
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && !error && users.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-text-muted">
-                                        No users found
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading &&
-                                !error &&
-                                users.map((user) => (
-                                    <tr
-                                        key={user._id}
-                                        className="border-b border-border last:border-0"
-                                    >
-                                        <td className="px-5 py-3 font-semibold text-text">
-                                            {user.name}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {user.phone}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {user.email}
-                                        </td>
-                                        <td className="px-5 py-3 capitalize text-text">
-                                            {user.role}
-                                        </td>
-                                        <td className="px-5 py-3 capitalize text-text-muted">
-                                            {user.accountType}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => toggleBlock(user)}
-                                                    className={`rounded-lg px-3 py-2.5 text-xs font-bold ${
-                                                        user.isBlocked
-                                                            ? "bg-emerald-50 text-emerald-600"
-                                                            : "bg-red-50 text-red-500"
-                                                    }`}
-                                                >
-                                                    {user.isBlocked ? "Unblock" : "Block"}
-                                                </button>
-                                                <button
-                                                    onClick={() => openEdit(user)}
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
-                                                >
-                                                    <Pencil size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
+            {isLoading && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    Loading...
                 </div>
-            </div>
+            )}
+
+            {!isLoading && error && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-red-500">
+                    {error}
+                </div>
+            )}
+
+            {!isLoading && !error && users.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    No users found
+                </div>
+            )}
+
+            {!isLoading && !error && users.length > 0 && (
+                <>
+                    {/* Mobile: one card per user */}
+                    <div className="space-y-3 md:hidden">
+                        {users.map((user) => (
+                            <div
+                                key={user._id}
+                                className="rounded-2xl border border-border bg-card p-4"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="truncate font-semibold text-text">
+                                            {user.name}
+                                        </p>
+                                        <p className="text-xs text-text-muted">{user.phone}</p>
+                                        <p className="truncate text-xs text-text-muted">
+                                            {user.email}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => openEdit(user)}
+                                        className="shrink-0 rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                </div>
+
+                                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                                    <p className="text-xs text-text-muted">
+                                        <span className="capitalize text-text">{user.role}</span>
+                                        {" · "}
+                                        <span className="capitalize">{user.accountType}</span>
+                                    </p>
+                                    <button
+                                        onClick={() => toggleBlock(user)}
+                                        className={`rounded-lg px-3 py-2 text-xs font-bold ${
+                                            user.isBlocked
+                                                ? "bg-emerald-50 text-emerald-600"
+                                                : "bg-red-50 text-red-500"
+                                        }`}
+                                    >
+                                        {user.isBlocked ? "Unblock" : "Block"}
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop / tablet: table */}
+                    <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">Name</th>
+                                        <th className="px-5 py-3">Phone</th>
+                                        <th className="px-5 py-3">Email</th>
+                                        <th className="px-5 py-3">Role</th>
+                                        <th className="px-5 py-3">Type</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.map((user) => (
+                                        <tr
+                                            key={user._id}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3 font-semibold text-text">
+                                                {user.name}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {user.phone}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {user.email}
+                                            </td>
+                                            <td className="px-5 py-3 capitalize text-text">
+                                                {user.role}
+                                            </td>
+                                            <td className="px-5 py-3 capitalize text-text-muted">
+                                                {user.accountType}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => toggleBlock(user)}
+                                                        className={`rounded-lg px-3 py-2.5 text-xs font-bold ${
+                                                            user.isBlocked
+                                                                ? "bg-emerald-50 text-emerald-600"
+                                                                : "bg-red-50 text-red-500"
+                                                        }`}
+                                                    >
+                                                        {user.isBlocked ? "Unblock" : "Block"}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openEdit(user)}
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {isModalOpen && (
                 <Modal

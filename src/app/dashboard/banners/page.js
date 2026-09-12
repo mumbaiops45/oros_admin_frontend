@@ -173,100 +173,150 @@ export default function BannersPage() {
                 </button>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">Preview</th>
-                                <th className="px-5 py-3">Type</th>
-                                <th className="px-5 py-3">Title</th>
-                                <th className="px-5 py-3">Order</th>
-                                <th className="px-5 py-3">Active</th>
-                                <th className="px-5 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-text-muted">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
+            {isLoading && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    Loading...
+                </div>
+            )}
 
-                            {!isLoading && error && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-red-500">
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
+            {!isLoading && error && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-red-500">
+                    {error}
+                </div>
+            )}
 
-                            {!isLoading && !error && banners.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-text-muted">
-                                        No banners yet
-                                    </td>
-                                </tr>
-                            )}
+            {!isLoading && !error && banners.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    No banners yet
+                </div>
+            )}
 
-                            {!isLoading &&
-                                !error &&
-                                banners.map((banner) => (
-                                    <tr
-                                        key={banner._id}
-                                        className="border-b border-border last:border-0"
-                                    >
-                                        <td className="px-5 py-3">
-                                            {banner.mediaUrlDesktop ? (
-                                                <img
-                                                    src={banner.mediaUrlDesktop}
-                                                    alt=""
-                                                    className="h-10 w-16 rounded-lg border border-border object-cover"
-                                                />
-                                            ) : (
-                                                <div className="flex h-10 w-16 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
-                                                    <ImageOff size={14} />
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-5 py-3 font-bold text-text">
-                                            {banner.type}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {banner.title1 || banner.title2 || "—"}
-                                        </td>
-                                        <td className="px-5 py-3 text-text">
-                                            {banner.order}
-                                        </td>
-                                        <td className="px-5 py-3">
+            {!isLoading && !error && banners.length > 0 && (
+                <>
+                    {/* Mobile: one card per banner */}
+                    <div className="space-y-3 md:hidden">
+                        {banners.map((banner) => (
+                            <div
+                                key={banner._id}
+                                className="rounded-2xl border border-border bg-card p-4"
+                            >
+                                <div className="flex items-start gap-3">
+                                    {banner.mediaUrlDesktop ? (
+                                        <img
+                                            src={banner.mediaUrlDesktop}
+                                            alt=""
+                                            className="h-12 w-20 shrink-0 rounded-lg border border-border object-cover"
+                                        />
+                                    ) : (
+                                        <div className="flex h-12 w-20 shrink-0 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
+                                            <ImageOff size={14} />
+                                        </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <p className="font-bold text-text">{banner.type}</p>
                                             <Badge tone={banner.isActive ? "success" : "neutral"}>
                                                 {banner.isActive ? "Live" : "Hidden"}
                                             </Badge>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEdit(banner)}
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
-                                                >
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(banner)}
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
+                                        </div>
+                                        <p className="truncate text-sm text-text-muted">
+                                            {banner.title1 || banner.title2 || "—"}
+                                        </p>
+                                        <p className="text-xs text-text-muted">
+                                            Order {banner.order}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 flex justify-end gap-2 border-t border-border pt-3">
+                                    <button
+                                        onClick={() => openEdit(banner)}
+                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(banner)}
+                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop / tablet: table */}
+                    <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">Preview</th>
+                                        <th className="px-5 py-3">Type</th>
+                                        <th className="px-5 py-3">Title</th>
+                                        <th className="px-5 py-3">Order</th>
+                                        <th className="px-5 py-3">Active</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                </thead>
+                                <tbody>
+                                    {banners.map((banner) => (
+                                        <tr
+                                            key={banner._id}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3">
+                                                {banner.mediaUrlDesktop ? (
+                                                    <img
+                                                        src={banner.mediaUrlDesktop}
+                                                        alt=""
+                                                        className="h-10 w-16 rounded-lg border border-border object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-10 w-16 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
+                                                        <ImageOff size={14} />
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-5 py-3 font-bold text-text">
+                                                {banner.type}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {banner.title1 || banner.title2 || "—"}
+                                            </td>
+                                            <td className="px-5 py-3 text-text">
+                                                {banner.order}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <Badge tone={banner.isActive ? "success" : "neutral"}>
+                                                    {banner.isActive ? "Live" : "Hidden"}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => openEdit(banner)}
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(banner)}
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {isModalOpen && (
                 <Modal
@@ -275,7 +325,7 @@ export default function BannersPage() {
                     maxWidth="max-w-2xl"
                 >
                     <form onSubmit={handleSave} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="Type">
                                 <select
                                     className={inputClass}
@@ -302,7 +352,7 @@ export default function BannersPage() {
                             </FormField>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="Tone">
                                 <select
                                     className={inputClass}
@@ -327,7 +377,7 @@ export default function BannersPage() {
                             </FormField>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="Title 1">
                                 <input
                                     className={inputClass}
@@ -353,7 +403,7 @@ export default function BannersPage() {
                             </FormField>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="Title 2">
                                 <input
                                     className={inputClass}
@@ -379,7 +429,7 @@ export default function BannersPage() {
                             </FormField>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="Subtitle">
                                 <input
                                     className={inputClass}
@@ -408,7 +458,7 @@ export default function BannersPage() {
                             </FormField>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="CTA label">
                                 <input
                                     className={inputClass}
@@ -436,7 +486,7 @@ export default function BannersPage() {
                             </FormField>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="Desktop media (leave empty to keep)">
                                 <input
                                     type="file"

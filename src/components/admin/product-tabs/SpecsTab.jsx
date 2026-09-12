@@ -89,18 +89,18 @@ export default function SpecsTab({ productId }) {
                 </div>
             ))}
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <input
                     placeholder="Label"
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}
-                    className={inputClass}
+                    className={`${inputClass} min-w-0 flex-1`}
                 />
                 <input
                     placeholder="Value"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    className={inputClass}
+                    className={`${inputClass} min-w-0 flex-1`}
                 />
                 <button
                     onClick={handleAdd}

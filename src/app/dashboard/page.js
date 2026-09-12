@@ -343,97 +343,136 @@ export default function DashboardPage() {
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">#</th>
-                                <th className="px-5 py-3">Product</th>
-                                <th className="px-5 py-3">SKU</th>
-                                <th className="px-5 py-3">Total time</th>
-                                <th className="px-5 py-3">Views</th>
-                                <th className="px-5 py-3">Avg / view</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td
-                                        colSpan={6}
-                                        className="px-5 py-10 text-center text-text-muted"
-                                    >
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
+                {isLoading && (
+                    <p className="px-5 py-10 text-center text-sm text-text-muted">
+                        Loading...
+                    </p>
+                )}
 
-                            {!isLoading && error && (
-                                <tr>
-                                    <td
-                                        colSpan={6}
-                                        className="px-5 py-10 text-center text-red-500"
-                                    >
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
+                {!isLoading && error && (
+                    <p className="px-5 py-10 text-center text-sm text-red-500">{error}</p>
+                )}
 
-                            {!isLoading && !error && rows.length === 0 && (
-                                <tr>
-                                    <td
-                                        colSpan={6}
-                                        className="px-5 py-10 text-center text-text-muted"
-                                    >
-                                        No product views recorded yet
-                                    </td>
-                                </tr>
-                            )}
+                {!isLoading && !error && rows.length === 0 && (
+                    <p className="px-5 py-10 text-center text-sm text-text-muted">
+                        No product views recorded yet
+                    </p>
+                )}
 
-                            {!isLoading &&
-                                !error &&
-                                rows.map((row, index) => (
-                                    <tr
-                                        key={row.productId}
-                                        className="border-b border-border last:border-0"
-                                    >
-                                        <td className="px-5 py-3 text-text-muted">
+                {!isLoading && !error && rows.length > 0 && (
+                    <>
+                        {/* Mobile: one card per product */}
+                        <div className="space-y-3 p-3 md:hidden">
+                            {rows.map((row, index) => (
+                                <div
+                                    key={row.productId}
+                                    className="rounded-xl border border-border p-3"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="shrink-0 text-xs text-text-muted">
                                             {(page - 1) * PAGE_SIZE + index + 1}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex items-center gap-3">
-                                                {row.productImage ? (
-                                                    <img
-                                                        src={row.productImage}
-                                                        alt={row.productName}
-                                                        className="h-10 w-10 rounded-lg border border-border object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
-                                                        <ImageOff size={16} />
-                                                    </div>
-                                                )}
-                                                <span className="font-semibold text-text">
-                                                    {row.productName}
-                                                </span>
+                                        </span>
+                                        {row.productImage ? (
+                                            <img
+                                                src={row.productImage}
+                                                alt={row.productName}
+                                                className="h-10 w-10 shrink-0 rounded-lg border border-border object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
+                                                <ImageOff size={16} />
                                             </div>
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {row.sku}
-                                        </td>
-                                        <td className="px-5 py-3 font-semibold text-text">
-                                            {formatDuration(row.totalDuration)}
-                                        </td>
-                                        <td className="px-5 py-3 text-text">
-                                            {row.totalviews}
-                                        </td>
-                                        <td className="px-5 py-3 text-text">
-                                            {formatDuration(row.averageDuration)}
-                                        </td>
+                                        )}
+                                        <div className="min-w-0">
+                                            <p className="truncate font-semibold text-text">
+                                                {row.productName}
+                                            </p>
+                                            <p className="text-xs text-text-muted">{row.sku}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-sm">
+                                        <div>
+                                            <p className="text-xs font-bold uppercase text-text-muted">
+                                                Total time
+                                            </p>
+                                            <p className="font-semibold text-text">
+                                                {formatDuration(row.totalDuration)}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold uppercase text-text-muted">
+                                                Views · Avg
+                                            </p>
+                                            <p className="text-text">
+                                                {row.totalviews} ·{" "}
+                                                {formatDuration(row.averageDuration)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Tablet / desktop: table */}
+                        <div className="hidden overflow-x-auto md:block">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">#</th>
+                                        <th className="px-5 py-3">Product</th>
+                                        <th className="px-5 py-3">SKU</th>
+                                        <th className="px-5 py-3">Total time</th>
+                                        <th className="px-5 py-3">Views</th>
+                                        <th className="px-5 py-3">Avg / view</th>
                                     </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody>
+                                    {rows.map((row, index) => (
+                                        <tr
+                                            key={row.productId}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {(page - 1) * PAGE_SIZE + index + 1}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    {row.productImage ? (
+                                                        <img
+                                                            src={row.productImage}
+                                                            alt={row.productName}
+                                                            className="h-10 w-10 rounded-lg border border-border object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
+                                                            <ImageOff size={16} />
+                                                        </div>
+                                                    )}
+                                                    <span className="font-semibold text-text">
+                                                        {row.productName}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {row.sku}
+                                            </td>
+                                            <td className="px-5 py-3 font-semibold text-text">
+                                                {formatDuration(row.totalDuration)}
+                                            </td>
+                                            <td className="px-5 py-3 text-text">
+                                                {row.totalviews}
+                                            </td>
+                                            <td className="px-5 py-3 text-text">
+                                                {formatDuration(row.averageDuration)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
 
                 {!isLoading && !error && (rows.length === PAGE_SIZE || page > 1) && (
                     <Pager
@@ -555,58 +594,72 @@ export default function DashboardPage() {
                 )}
 
                 <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                    <th className="px-5 py-3">Date</th>
-                                    <th className="px-5 py-3">Revenue</th>
-                                    <th className="px-5 py-3">Orders</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {isTrendLoading && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="px-5 py-10 text-center text-text-muted"
-                                        >
-                                            Loading...
-                                        </td>
-                                    </tr>
-                                )}
+                    {isTrendLoading && (
+                        <p className="px-5 py-10 text-center text-sm text-text-muted">
+                            Loading...
+                        </p>
+                    )}
 
-                                {!isTrendLoading && trendSeries.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="px-5 py-10 text-center text-text-muted"
-                                        >
-                                            No sales in this range
-                                        </td>
-                                    </tr>
-                                )}
+                    {!isTrendLoading && trendSeries.length === 0 && (
+                        <p className="px-5 py-10 text-center text-sm text-text-muted">
+                            No sales in this range
+                        </p>
+                    )}
 
-                                {!isTrendLoading &&
-                                    trendPageRows.map((point) => (
-                                        <tr
-                                            key={point.date}
-                                            className="border-b border-border last:border-0"
-                                        >
-                                            <td className="px-5 py-3 text-text">
-                                                {formatDate(point.date)}
-                                            </td>
-                                            <td className="px-5 py-3 font-semibold text-text">
+                    {!isTrendLoading && trendSeries.length > 0 && (
+                        <>
+                            {/* Mobile: one card per date */}
+                            <div className="space-y-2 p-3 sm:hidden">
+                                {trendPageRows.map((point) => (
+                                    <div
+                                        key={point.date}
+                                        className="flex items-center justify-between rounded-xl border border-border p-3 text-sm"
+                                    >
+                                        <p className="text-text">{formatDate(point.date)}</p>
+                                        <div className="text-right">
+                                            <p className="font-semibold text-text">
                                                 {formatCurrency(point.revenue)}
-                                            </td>
-                                            <td className="px-5 py-3 text-text-muted">
-                                                {point.orders}
-                                            </td>
+                                            </p>
+                                            <p className="text-xs text-text-muted">
+                                                {point.orders} orders
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Tablet / desktop: table */}
+                            <div className="hidden overflow-x-auto sm:block">
+                                <table className="w-full text-left text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                            <th className="px-5 py-3">Date</th>
+                                            <th className="px-5 py-3">Revenue</th>
+                                            <th className="px-5 py-3">Orders</th>
                                         </tr>
-                                    ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody>
+                                        {trendPageRows.map((point) => (
+                                            <tr
+                                                key={point.date}
+                                                className="border-b border-border last:border-0"
+                                            >
+                                                <td className="px-5 py-3 text-text">
+                                                    {formatDate(point.date)}
+                                                </td>
+                                                <td className="px-5 py-3 font-semibold text-text">
+                                                    {formatCurrency(point.revenue)}
+                                                </td>
+                                                <td className="px-5 py-3 text-text-muted">
+                                                    {point.orders}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
 
                     {!isTrendLoading && trendSeries.length > PAGE_SIZE && (
                         <Pager
@@ -710,74 +763,102 @@ export default function DashboardPage() {
                 <h2 className="mb-4 text-lg font-extrabold text-text">Top products</h2>
 
                 <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                    <th className="px-5 py-3">Name</th>
-                                    <th className="px-5 py-3">Value</th>
-                                    <th className="px-5 py-3">Detail</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {isProductsLoading && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="px-5 py-10 text-center text-text-muted"
-                                        >
-                                            Loading...
-                                        </td>
-                                    </tr>
-                                )}
+                    {isProductsLoading && (
+                        <p className="px-5 py-10 text-center text-sm text-text-muted">
+                            Loading...
+                        </p>
+                    )}
 
-                                {!isProductsLoading && products.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="px-5 py-10 text-center text-text-muted"
-                                        >
-                                            No sales in this range
-                                        </td>
-                                    </tr>
-                                )}
+                    {!isProductsLoading && products.length === 0 && (
+                        <p className="px-5 py-10 text-center text-sm text-text-muted">
+                            No sales in this range
+                        </p>
+                    )}
 
-                                {!isProductsLoading &&
-                                    products.map((product) => (
-                                        <tr
-                                            key={product.productId}
-                                            className="border-b border-border last:border-0"
-                                        >
-                                            <td className="px-5 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    {product.image ? (
-                                                        <img
-                                                            src={product.image}
-                                                            alt={product.name}
-                                                            className="h-10 w-10 rounded-lg border border-border object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
-                                                            <ImageOff size={16} />
-                                                        </div>
-                                                    )}
-                                                    <span className="font-semibold text-text">
-                                                        {product.name}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-5 py-3 font-semibold text-text">
-                                                {formatCurrency(product.revenue)}
-                                            </td>
-                                            <td className="px-5 py-3 text-text-muted">
+                    {!isProductsLoading && products.length > 0 && (
+                        <>
+                            {/* Mobile: one card per product */}
+                            <div className="space-y-3 p-3 md:hidden">
+                                {products.map((product) => (
+                                    <div
+                                        key={product.productId}
+                                        className="flex items-center gap-3 rounded-xl border border-border p-3"
+                                    >
+                                        {product.image ? (
+                                            <img
+                                                src={product.image}
+                                                alt={product.name}
+                                                className="h-10 w-10 shrink-0 rounded-lg border border-border object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
+                                                <ImageOff size={16} />
+                                            </div>
+                                        )}
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate font-semibold text-text">
+                                                {product.name}
+                                            </p>
+                                            <p className="text-xs text-text-muted">
                                                 {product.unitsSold} sold · {product.orders ?? 0}{" "}
                                                 orders
-                                            </td>
+                                            </p>
+                                        </div>
+                                        <p className="shrink-0 font-semibold text-text">
+                                            {formatCurrency(product.revenue)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Tablet / desktop: table */}
+                            <div className="hidden overflow-x-auto md:block">
+                                <table className="w-full text-left text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                            <th className="px-5 py-3">Name</th>
+                                            <th className="px-5 py-3">Value</th>
+                                            <th className="px-5 py-3">Detail</th>
                                         </tr>
-                                    ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody>
+                                        {products.map((product) => (
+                                            <tr
+                                                key={product.productId}
+                                                className="border-b border-border last:border-0"
+                                            >
+                                                <td className="px-5 py-3">
+                                                    <div className="flex items-center gap-3">
+                                                        {product.image ? (
+                                                            <img
+                                                                src={product.image}
+                                                                alt={product.name}
+                                                                className="h-10 w-10 rounded-lg border border-border object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
+                                                                <ImageOff size={16} />
+                                                            </div>
+                                                        )}
+                                                        <span className="font-semibold text-text">
+                                                            {product.name}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-5 py-3 font-semibold text-text">
+                                                    {formatCurrency(product.revenue)}
+                                                </td>
+                                                <td className="px-5 py-3 text-text-muted">
+                                                    {product.unitsSold} sold ·{" "}
+                                                    {product.orders ?? 0} orders
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
 
                     {!isProductsLoading && (products.length === PAGE_SIZE || productsPage > 1) && (
                         <Pager
@@ -795,59 +876,76 @@ export default function DashboardPage() {
                 <h2 className="mb-4 text-lg font-extrabold text-text">Top categories</h2>
 
                 <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                    <th className="px-5 py-3">Name</th>
-                                    <th className="px-5 py-3">Value</th>
-                                    <th className="px-5 py-3">Detail</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {isCategoriesLoading && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="px-5 py-10 text-center text-text-muted"
-                                        >
-                                            Loading...
-                                        </td>
-                                    </tr>
-                                )}
+                    {isCategoriesLoading && (
+                        <p className="px-5 py-10 text-center text-sm text-text-muted">
+                            Loading...
+                        </p>
+                    )}
 
-                                {!isCategoriesLoading && categories.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="px-5 py-10 text-center text-text-muted"
-                                        >
-                                            No sales in this range
-                                        </td>
-                                    </tr>
-                                )}
+                    {!isCategoriesLoading && categories.length === 0 && (
+                        <p className="px-5 py-10 text-center text-sm text-text-muted">
+                            No sales in this range
+                        </p>
+                    )}
 
-                                {!isCategoriesLoading &&
-                                    categories.map((category) => (
-                                        <tr
-                                            key={category.categoryId || category.name}
-                                            className="border-b border-border last:border-0"
-                                        >
-                                            <td className="px-5 py-3 font-semibold text-text">
+                    {!isCategoriesLoading && categories.length > 0 && (
+                        <>
+                            {/* Mobile: one card per category */}
+                            <div className="space-y-3 p-3 sm:hidden">
+                                {categories.map((category) => (
+                                    <div
+                                        key={category.categoryId || category.name}
+                                        className="flex items-center justify-between rounded-xl border border-border p-3"
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="truncate font-semibold text-text">
                                                 {category.name}
-                                            </td>
-                                            <td className="px-5 py-3 font-semibold text-text">
-                                                {formatCurrency(category.revenue)}
-                                            </td>
-                                            <td className="px-5 py-3 text-text-muted">
-                                                {Number(category.sharePercent ?? 0).toFixed(2)}% share ·{" "}
-                                                {category.unitsSold} units
-                                            </td>
+                                            </p>
+                                            <p className="text-xs text-text-muted">
+                                                {Number(category.sharePercent ?? 0).toFixed(2)}%
+                                                share · {category.unitsSold} units
+                                            </p>
+                                        </div>
+                                        <p className="shrink-0 font-semibold text-text">
+                                            {formatCurrency(category.revenue)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Tablet / desktop: table */}
+                            <div className="hidden overflow-x-auto sm:block">
+                                <table className="w-full text-left text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                            <th className="px-5 py-3">Name</th>
+                                            <th className="px-5 py-3">Value</th>
+                                            <th className="px-5 py-3">Detail</th>
                                         </tr>
-                                    ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody>
+                                        {categories.map((category) => (
+                                            <tr
+                                                key={category.categoryId || category.name}
+                                                className="border-b border-border last:border-0"
+                                            >
+                                                <td className="px-5 py-3 font-semibold text-text">
+                                                    {category.name}
+                                                </td>
+                                                <td className="px-5 py-3 font-semibold text-text">
+                                                    {formatCurrency(category.revenue)}
+                                                </td>
+                                                <td className="px-5 py-3 text-text-muted">
+                                                    {Number(category.sharePercent ?? 0).toFixed(2)}
+                                                    % share · {category.unitsSold} units
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
 
                     {!isCategoriesLoading &&
                         (categories.length === PAGE_SIZE || categoriesPage > 1) && (
@@ -866,65 +964,82 @@ export default function DashboardPage() {
                 <h2 className="mb-4 text-lg font-extrabold text-text">Top customers</h2>
 
                 <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                    <th className="px-5 py-3">Name</th>
-                                    <th className="px-5 py-3">Value</th>
-                                    <th className="px-5 py-3">Detail</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {isCustomersLoading && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="px-5 py-10 text-center text-text-muted"
-                                        >
-                                            Loading...
-                                        </td>
-                                    </tr>
-                                )}
+                    {isCustomersLoading && (
+                        <p className="px-5 py-10 text-center text-sm text-text-muted">
+                            Loading...
+                        </p>
+                    )}
 
-                                {!isCustomersLoading && customers.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={3}
-                                            className="px-5 py-10 text-center text-text-muted"
-                                        >
-                                            No orders in this range
-                                        </td>
-                                    </tr>
-                                )}
+                    {!isCustomersLoading && customers.length === 0 && (
+                        <p className="px-5 py-10 text-center text-sm text-text-muted">
+                            No orders in this range
+                        </p>
+                    )}
 
-                                {!isCustomersLoading &&
-                                    customers.map((customer) => (
-                                        <tr
-                                            key={customer.customerId || customer.phone}
-                                            className="border-b border-border last:border-0"
-                                        >
-                                            <td className="px-5 py-3">
-                                                <span className="font-semibold text-text">
-                                                    {customer.name}
-                                                </span>
-                                                {customer.phone && (
-                                                    <span className="ml-2 text-text-muted">
-                                                        · {customer.phone}
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-5 py-3 font-semibold text-text">
-                                                {formatCurrency(customer.revenue)}
-                                            </td>
-                                            <td className="px-5 py-3 text-text-muted">
+                    {!isCustomersLoading && customers.length > 0 && (
+                        <>
+                            {/* Mobile: one card per customer */}
+                            <div className="space-y-3 p-3 sm:hidden">
+                                {customers.map((customer) => (
+                                    <div
+                                        key={customer.customerId || customer.phone}
+                                        className="flex items-center justify-between rounded-xl border border-border p-3"
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="truncate font-semibold text-text">
+                                                {customer.name}
+                                            </p>
+                                            <p className="text-xs text-text-muted">
+                                                {customer.phone ? `${customer.phone} · ` : ""}
                                                 {customer.orders} orders
-                                            </td>
+                                            </p>
+                                        </div>
+                                        <p className="shrink-0 font-semibold text-text">
+                                            {formatCurrency(customer.revenue)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Tablet / desktop: table */}
+                            <div className="hidden overflow-x-auto sm:block">
+                                <table className="w-full text-left text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                            <th className="px-5 py-3">Name</th>
+                                            <th className="px-5 py-3">Value</th>
+                                            <th className="px-5 py-3">Detail</th>
                                         </tr>
-                                    ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody>
+                                        {customers.map((customer) => (
+                                            <tr
+                                                key={customer.customerId || customer.phone}
+                                                className="border-b border-border last:border-0"
+                                            >
+                                                <td className="px-5 py-3">
+                                                    <span className="font-semibold text-text">
+                                                        {customer.name}
+                                                    </span>
+                                                    {customer.phone && (
+                                                        <span className="ml-2 text-text-muted">
+                                                            · {customer.phone}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-5 py-3 font-semibold text-text">
+                                                    {formatCurrency(customer.revenue)}
+                                                </td>
+                                                <td className="px-5 py-3 text-text-muted">
+                                                    {customer.orders} orders
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
 
                     {!isCustomersLoading &&
                         (customers.length === PAGE_SIZE || customersPage > 1) && (

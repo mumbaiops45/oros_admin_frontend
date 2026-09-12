@@ -89,20 +89,20 @@ export default function PriceSlabsTab({ productId }) {
                 </div>
             ))}
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <input
                     type="number"
                     placeholder="Min qty"
                     value={form.minQty}
                     onChange={(e) => setForm((p) => ({ ...p, minQty: e.target.value }))}
-                    className={inputClass}
+                    className={`${inputClass} min-w-0 flex-1`}
                 />
                 <input
                     type="number"
                     placeholder="Max qty"
                     value={form.maxQty}
                     onChange={(e) => setForm((p) => ({ ...p, maxQty: e.target.value }))}
-                    className={inputClass}
+                    className={`${inputClass} min-w-0 flex-1`}
                 />
                 <input
                     type="number"
@@ -111,7 +111,7 @@ export default function PriceSlabsTab({ productId }) {
                     onChange={(e) =>
                         setForm((p) => ({ ...p, unitPrice: e.target.value }))
                     }
-                    className={inputClass}
+                    className={`${inputClass} min-w-0 flex-1`}
                 />
                 <button
                     onClick={handleAdd}

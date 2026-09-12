@@ -110,7 +110,7 @@ export default function MediaTab({ productId }) {
             {isLoading && <p className="text-sm text-text-muted">Loading...</p>}
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 {media.map((item) => (
                     <div key={item._id} className="rounded-xl border border-border p-2">
                         {item.type === "VIDEO" ? (

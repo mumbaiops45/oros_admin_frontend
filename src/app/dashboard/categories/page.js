@@ -164,104 +164,148 @@ export default function CategoriesPage() {
                 </button>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">Name</th>
-                                <th className="px-5 py-3">Slug</th>
-                                <th className="px-5 py-3">Active</th>
-                                <th className="px-5 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td colSpan={4} className="px-5 py-10 text-center text-text-muted">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && error && (
-                                <tr>
-                                    <td colSpan={4} className="px-5 py-10 text-center text-red-500">
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && !error && categories.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="px-5 py-10 text-center text-text-muted">
-                                        No categories yet
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading &&
-                                !error &&
-                                pageRows.map((category) => (
-                                    <tr
-                                        key={category._id}
-                                        className="border-b border-border last:border-0"
-                                    >
-                                        <td className="px-5 py-3">
-                                            <div className="flex items-center gap-3">
-                                                {category.image ? (
-                                                    <img
-                                                        src={category.image}
-                                                        alt={category.name}
-                                                        className="h-9 w-9 rounded-lg border border-border object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
-                                                        <ImageOff size={14} />
-                                                    </div>
-                                                )}
-                                                <span className="font-semibold text-text">
-                                                    {category.name}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {category.slug}
-                                        </td>
-                                        <td className="px-5 py-3 text-text">
-                                            {category.isActive ? "Yes" : "No"}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEdit(category)}
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
-                                                >
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(category)}
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
+            {isLoading && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    Loading...
                 </div>
+            )}
 
-                {!isLoading && !error && categories.length > PAGE_SIZE && (
+            {!isLoading && error && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-red-500">
+                    {error}
+                </div>
+            )}
+
+            {!isLoading && !error && categories.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    No categories yet
+                </div>
+            )}
+
+            {!isLoading && !error && categories.length > 0 && (
+                <>
+                    {/* Mobile: one card per category */}
+                    <div className="space-y-3 md:hidden">
+                        {pageRows.map((category) => (
+                            <div
+                                key={category._id}
+                                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4"
+                            >
+                                {category.image ? (
+                                    <img
+                                        src={category.image}
+                                        alt={category.name}
+                                        className="h-11 w-11 shrink-0 rounded-lg border border-border object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
+                                        <ImageOff size={14} />
+                                    </div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate font-semibold text-text">
+                                        {category.name}
+                                    </p>
+                                    <p className="truncate text-xs text-text-muted">
+                                        {category.slug} ·{" "}
+                                        {category.isActive ? "Active" : "Inactive"}
+                                    </p>
+                                </div>
+                                <div className="flex shrink-0 gap-2">
+                                    <button
+                                        onClick={() => openEdit(category)}
+                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(category)}
+                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop / tablet: table */}
+                    <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">Name</th>
+                                        <th className="px-5 py-3">Slug</th>
+                                        <th className="px-5 py-3">Active</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pageRows.map((category) => (
+                                        <tr
+                                            key={category._id}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    {category.image ? (
+                                                        <img
+                                                            src={category.image}
+                                                            alt={category.name}
+                                                            className="h-9 w-9 rounded-lg border border-border object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-bg text-text-muted">
+                                                            <ImageOff size={14} />
+                                                        </div>
+                                                    )}
+                                                    <span className="font-semibold text-text">
+                                                        {category.name}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {category.slug}
+                                            </td>
+                                            <td className="px-5 py-3 text-text">
+                                                {category.isActive ? "Yes" : "No"}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => openEdit(category)}
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(category)}
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {!isLoading && !error && categories.length > PAGE_SIZE && (
+                <div className="mt-3 rounded-2xl border border-border bg-card">
                     <Pager
                         page={page}
                         hasNext={page * PAGE_SIZE < categories.length}
                         onPrev={() => setPage((p) => Math.max(1, p - 1))}
                         onNext={() => setPage((p) => p + 1)}
                     />
-                )}
-            </div>
+                </div>
+            )}
 
             {isModalOpen && (
                 <Modal

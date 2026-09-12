@@ -110,95 +110,155 @@ export default function QuotationsPage() {
 
     return (
         <div>
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">Ref</th>
-                                <th className="px-5 py-3">Customer</th>
-                                <th className="px-5 py-3">Type</th>
-                                <th className="px-5 py-3">Items</th>
-                                <th className="px-5 py-3">Files</th>
-                                <th className="px-5 py-3">Total</th>
-                                <th className="px-5 py-3">Status</th>
-                                <th className="px-5 py-3"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td colSpan={8} className="px-5 py-10 text-center text-text-muted">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && error && (
-                                <tr>
-                                    <td colSpan={8} className="px-5 py-10 text-center text-red-500">
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && !error && quotations.length === 0 && (
-                                <tr>
-                                    <td colSpan={8} className="px-5 py-10 text-center text-text-muted">
-                                        No quotations yet
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading &&
-                                !error &&
-                                quotations.map((q) => (
-                                    <tr
-                                        key={q._id}
-                                        className="border-b border-border last:border-0"
-                                    >
-                                        <td className="px-5 py-3">
-                                            <p className="font-semibold text-text">
-                                                {q.refNumber}
-                                            </p>
-                                            <p className="text-xs text-text-muted">
-                                                {formatDate(q.createdAt)}
-                                            </p>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <p className="text-text">{q.name}</p>
-                                            <p className="text-xs text-text-muted">
-                                                {q.phone}
-                                            </p>
-                                        </td>
-                                        <td className="px-5 py-3 text-text">{q.type}</td>
-                                        <td className="px-5 py-3 text-text">
-                                            {q.items?.length || 0}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {q.files?.length || "—"}
-                                        </td>
-                                        <td className="px-5 py-3 font-semibold text-text">
-                                            {formatCurrency(q.total)}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <Badge tone="neutral">{q.status}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3 text-right">
-                                            <button
-                                                onClick={() => setManaging(q)}
-                                                className="text-xs font-bold text-accent hover:text-accent-dark"
-                                            >
-                                                Manage
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
+            {isLoading && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    Loading...
                 </div>
+            )}
 
-                <div className="flex items-center justify-between border-t border-border px-5 py-3">
+            {!isLoading && error && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-red-500">
+                    {error}
+                </div>
+            )}
+
+            {!isLoading && !error && quotations.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    No quotations yet
+                </div>
+            )}
+
+            {!isLoading && !error && quotations.length > 0 && (
+                <>
+                    {/* Mobile: one card per quotation */}
+                    <div className="space-y-3 md:hidden">
+                        {quotations.map((q) => (
+                            <div
+                                key={q._id}
+                                className="rounded-2xl border border-border bg-card p-4"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="truncate font-semibold text-text">
+                                            {q.refNumber}
+                                        </p>
+                                        <p className="text-xs text-text-muted">
+                                            {formatDate(q.createdAt)}
+                                        </p>
+                                    </div>
+                                    <Badge tone="neutral">{q.status}</Badge>
+                                </div>
+
+                                <div className="mt-3 border-t border-border pt-3 text-sm">
+                                    <p className="text-text">{q.name}</p>
+                                    <p className="text-xs text-text-muted">{q.phone}</p>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-sm">
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Type
+                                        </p>
+                                        <p className="text-text">{q.type}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Items · Files
+                                        </p>
+                                        <p className="text-text">
+                                            {q.items?.length || 0} · {q.files?.length || "—"}
+                                        </p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Total
+                                        </p>
+                                        <p className="font-semibold text-text">
+                                            {formatCurrency(q.total)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 border-t border-border pt-3 text-right">
+                                    <button
+                                        onClick={() => setManaging(q)}
+                                        className="text-xs font-bold text-accent hover:text-accent-dark"
+                                    >
+                                        Manage
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop / tablet: table */}
+                    <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">Ref</th>
+                                        <th className="px-5 py-3">Customer</th>
+                                        <th className="px-5 py-3">Type</th>
+                                        <th className="px-5 py-3">Items</th>
+                                        <th className="px-5 py-3">Files</th>
+                                        <th className="px-5 py-3">Total</th>
+                                        <th className="px-5 py-3">Status</th>
+                                        <th className="px-5 py-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {quotations.map((q) => (
+                                        <tr
+                                            key={q._id}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3">
+                                                <p className="font-semibold text-text">
+                                                    {q.refNumber}
+                                                </p>
+                                                <p className="text-xs text-text-muted">
+                                                    {formatDate(q.createdAt)}
+                                                </p>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <p className="text-text">{q.name}</p>
+                                                <p className="text-xs text-text-muted">
+                                                    {q.phone}
+                                                </p>
+                                            </td>
+                                            <td className="px-5 py-3 text-text">{q.type}</td>
+                                            <td className="px-5 py-3 text-text">
+                                                {q.items?.length || 0}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {q.files?.length || "—"}
+                                            </td>
+                                            <td className="px-5 py-3 font-semibold text-text">
+                                                {formatCurrency(q.total)}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <Badge tone="neutral">{q.status}</Badge>
+                                            </td>
+                                            <td className="px-5 py-3 text-right">
+                                                <button
+                                                    onClick={() => setManaging(q)}
+                                                    className="text-xs font-bold text-accent hover:text-accent-dark"
+                                                >
+                                                    Manage
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {!isLoading && !error && quotations.length > 0 && (
+                <div className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3">
                     <p className="text-xs text-text-muted">Page {page}</p>
                     <div className="flex gap-2">
                         <button
@@ -219,7 +279,7 @@ export default function QuotationsPage() {
                         </button>
                     </div>
                 </div>
-            </div>
+            )}
 
             {managing && (
                 <QuotationModal
@@ -305,7 +365,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
     return (
         <Modal title={`Quotation ${quotation.refNumber}`} onClose={onClose} maxWidth="max-w-2xl">
             <div className="mb-5 rounded-xl bg-bg p-4 text-sm">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <p>
                         <span className="text-text-muted">Name</span>{" "}
                         <span className="font-semibold text-text">{quotation.name}</span>
@@ -347,7 +407,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                 {address.state}, {address.pincode}, {address.country}
                             </p>
                         ) : (
-                            <div className="mt-2 grid grid-cols-2 gap-2">
+                            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                                 <input
                                     placeholder="Name"
                                     className={inputClass}
@@ -366,7 +426,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                 />
                                 <input
                                     placeholder="Address line 1"
-                                    className={`${inputClass} col-span-2`}
+                                    className={`${inputClass} sm:col-span-2`}
                                     value={address.addressLine1}
                                     onChange={(e) =>
                                         setAddress((p) => ({
@@ -377,7 +437,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                 />
                                 <input
                                     placeholder="Address line 2"
-                                    className={`${inputClass} col-span-2`}
+                                    className={`${inputClass} sm:col-span-2`}
                                     value={address.addressLine2}
                                     onChange={(e) =>
                                         setAddress((p) => ({
@@ -424,7 +484,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                         }))
                                     }
                                 />
-                                <p className="col-span-2 text-xs text-text-muted">
+                                <p className="text-xs text-text-muted sm:col-span-2">
                                     Changes are saved with the rest of this form.
                                 </p>
                             </div>
@@ -432,6 +492,54 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                     </div>
                 )}
             </div>
+
+            {quotation.messages?.length > 0 && (
+                <div className="mb-5 rounded-xl border border-border p-4">
+                    <p className="mb-3 text-xs font-bold uppercase tracking-wide text-text-muted">
+                        Messages
+                    </p>
+
+                    <div className="max-h-56 space-y-3 overflow-y-auto">
+                        {[...quotation.messages]
+                            .sort(
+                                (a, b) =>
+                                    new Date(a.createdAt) - new Date(b.createdAt)
+                            )
+                            .map((item) => (
+                                <div
+                                    key={item._id}
+                                    className={`flex ${
+                                        item.sender === "ADMIN"
+                                            ? "justify-end"
+                                            : "justify-start"
+                                    }`}
+                                >
+                                    <div
+                                        className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
+                                            item.sender === "ADMIN"
+                                                ? "bg-primary text-white"
+                                                : "bg-bg text-text"
+                                        }`}
+                                    >
+                                        <p>{item.message}</p>
+                                        <p
+                                            className={`mt-1 text-[10px] ${
+                                                item.sender === "ADMIN"
+                                                    ? "text-white/70"
+                                                    : "text-text-muted"
+                                            }`}
+                                        >
+                                            {item.sender === "ADMIN"
+                                                ? "You"
+                                                : quotation.name || "Customer"}{" "}
+                                            · {formatDate(item.createdAt)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+            )}
 
             <form onSubmit={handleSave} className="space-y-5">
                 <div>
@@ -487,7 +595,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField label="Status">
                         <select
                             className={inputClass}
@@ -512,7 +620,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                     </FormField>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <FormField label="Sub total">
                         <input
                             type="number"

@@ -8,10 +8,14 @@ import Sidebar from "@/components/admin/Sidebar";
 import Topbar from "@/components/admin/Topbar";
 import NotificationPanel from "@/components/admin/NotificationPanel";
 import { useAuthStore, ADMIN_ROLES } from "@/store/useAuthStore";
+import { useNotificationStore } from "@/store/useNotificationStore";
+
+const NOTIFICATION_POLL_INTERVAL_MS = 15000;
 
 export default function DashboardLayout({ children }) {
     const router = useRouter();
     const { user, token, hasHydrated } = useAuthStore();
+    const fetchNotifications = useNotificationStore((state) => state.fetchNotifications);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const isAuthorized = token && user && ADMIN_ROLES.includes(user.role);
@@ -21,6 +25,17 @@ export default function DashboardLayout({ children }) {
             router.replace("/");
         }
     }, [hasHydrated, isAuthorized, router]);
+
+    useEffect(() => {
+        if (!isAuthorized) {
+            return;
+        }
+
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, NOTIFICATION_POLL_INTERVAL_MS);
+
+        return () => clearInterval(interval);
+    }, [isAuthorized, fetchNotifications]);
 
     if (!hasHydrated || !isAuthorized) {
         return (
@@ -34,10 +49,12 @@ export default function DashboardLayout({ children }) {
         <div className="flex min-h-screen w-full bg-bg">
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-            <div className="flex min-h-screen flex-1 flex-col">
+            <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col">
                 <Topbar onMenuClick={() => setSidebarOpen(true)} />
 
-                <main className="flex-1 px-4 py-6 sm:px-8">{children}</main>
+                <main className="w-full min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-8">
+                    {children}
+                </main>
             </div>
 
             <NotificationPanel />

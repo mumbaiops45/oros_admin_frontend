@@ -160,126 +160,211 @@ export default function OrdersPage() {
                 ))}
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">Order</th>
-                                <th className="px-5 py-3">Source</th>
-                                <th className="px-5 py-3">Customer</th>
-                                <th className="px-5 py-3">Items</th>
-                                <th className="px-5 py-3">Total</th>
-                                <th className="px-5 py-3">Order status</th>
-                                <th className="px-5 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td colSpan={7} className="px-5 py-10 text-center text-text-muted">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
+            {isLoading && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    Loading...
+                </div>
+            )}
 
-                            {!isLoading && error && (
-                                <tr>
-                                    <td colSpan={7} className="px-5 py-10 text-center text-red-500">
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
+            {!isLoading && error && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-red-500">
+                    {error}
+                </div>
+            )}
 
-                            {!isLoading && !error && filtered.length === 0 && (
-                                <tr>
-                                    <td colSpan={7} className="px-5 py-10 text-center text-text-muted">
-                                        No orders in this tab
-                                    </td>
-                                </tr>
-                            )}
+            {!isLoading && !error && filtered.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    No orders in this tab
+                </div>
+            )}
 
-                            {!isLoading &&
-                                !error &&
-                                pageRows.map((order) => (
-                                    <tr
-                                        key={order._id}
-                                        className="border-b border-border last:border-0"
+            {!isLoading && !error && filtered.length > 0 && (
+                <>
+                    {/* Mobile: one card per order, all details stacked — no horizontal scrolling */}
+                    <div className="space-y-3 md:hidden">
+                        {pageRows.map((order) => (
+                            <div
+                                key={order._id}
+                                className="rounded-2xl border border-border bg-card p-4"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="truncate text-xs font-semibold text-text">
+                                            #{order._id}
+                                        </p>
+                                        <p className="text-xs text-text-muted">
+                                            {formatDate(order.createdAt)}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setViewing(order)}
+                                        className="shrink-0 text-xs font-bold text-accent hover:text-accent-dark"
                                     >
-                                        <td className="px-5 py-3">
-                                            <p className="text-xs font-semibold text-text">
-                                                #{order._id}
-                                            </p>
-                                            <p className="text-xs text-text-muted">
-                                                {formatDate(order.createdAt)}
-                                            </p>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex flex-col items-start gap-1.5">
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    <Badge tone={SOURCE_TONE[order.source] || "neutral"}>
-                                                        {order.source}
-                                                    </Badge>
+                                        View
+                                    </button>
+                                </div>
+
+                                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                                    <Badge tone={SOURCE_TONE[order.source] || "neutral"}>
+                                        {order.source}
+                                    </Badge>
+                                    {typeof order.quotation === "object" &&
+                                        order.quotation?.type && (
+                                            <Badge tone="solid">{order.quotation.type}</Badge>
+                                        )}
+                                    {typeof order.quotation === "object" &&
+                                        order.quotation?.refNumber && (
+                                            <Badge tone="outline">
+                                                {order.quotation.refNumber}
+                                            </Badge>
+                                        )}
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-sm">
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Customer
+                                        </p>
+                                        <p className="font-medium text-text">
+                                            {order.user?.name || "—"}
+                                        </p>
+                                        <p className="text-xs text-text-muted">
+                                            {order.user?.phone || ""}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Items · Total
+                                        </p>
+                                        <p className="font-semibold text-text">
+                                            {itemCount(order)} items ·{" "}
+                                            {formatCurrency(order.pricing?.total)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 border-t border-border pt-3">
+                                    <p className="mb-1.5 text-xs font-bold uppercase text-text-muted">
+                                        Order status
+                                    </p>
+                                    <select
+                                        value={order.status}
+                                        disabled={updatingId === order._id}
+                                        onChange={(e) =>
+                                            handleStatusChange(order, e.target.value)
+                                        }
+                                        className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-text outline-none focus:border-primary"
+                                    >
+                                        {STATUS_OPTIONS.map((status) => (
+                                            <option key={status} value={status}>
+                                                {status}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop / tablet: table */}
+                    <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">Order</th>
+                                        <th className="px-5 py-3">Source</th>
+                                        <th className="px-5 py-3">Customer</th>
+                                        <th className="px-5 py-3">Items</th>
+                                        <th className="px-5 py-3">Total</th>
+                                        <th className="px-5 py-3">Order status</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pageRows.map((order) => (
+                                        <tr
+                                            key={order._id}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3">
+                                                <p className="text-xs font-semibold text-text">
+                                                    #{order._id}
+                                                </p>
+                                                <p className="text-xs text-text-muted">
+                                                    {formatDate(order.createdAt)}
+                                                </p>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex flex-col items-start gap-1.5">
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        <Badge tone={SOURCE_TONE[order.source] || "neutral"}>
+                                                            {order.source}
+                                                        </Badge>
+                                                        {typeof order.quotation === "object" &&
+                                                            order.quotation?.type && (
+                                                                <Badge tone="solid">
+                                                                    {order.quotation.type}
+                                                                </Badge>
+                                                            )}
+                                                    </div>
                                                     {typeof order.quotation === "object" &&
-                                                        order.quotation?.type && (
-                                                            <Badge tone="solid">
-                                                                {order.quotation.type}
+                                                        order.quotation?.refNumber && (
+                                                            <Badge tone="outline">
+                                                                {order.quotation.refNumber}
                                                             </Badge>
                                                         )}
                                                 </div>
-                                                {typeof order.quotation === "object" &&
-                                                    order.quotation?.refNumber && (
-                                                        <Badge tone="outline">
-                                                            {order.quotation.refNumber}
-                                                        </Badge>
-                                                    )}
-                                            </div>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <p className="font-medium text-text">
-                                                {order.user?.name || "—"}
-                                            </p>
-                                            <p className="text-xs text-text-muted">
-                                                {order.user?.phone || ""}
-                                            </p>
-                                        </td>
-                                        <td className="px-5 py-3 text-text">
-                                            {itemCount(order)}
-                                        </td>
-                                        <td className="px-5 py-3 font-semibold text-text">
-                                            {formatCurrency(order.pricing?.total)}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <select
-                                                value={order.status}
-                                                disabled={updatingId === order._id}
-                                                onChange={(e) =>
-                                                    handleStatusChange(order, e.target.value)
-                                                }
-                                                className="rounded-lg border border-border bg-white px-2 py-1.5 text-xs font-semibold text-text outline-none focus:border-primary"
-                                            >
-                                                {STATUS_OPTIONS.map((status) => (
-                                                    <option key={status} value={status}>
-                                                        {status}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td className="px-5 py-3 text-right">
-                                            <button
-                                                onClick={() => setViewing(order)}
-                                                className="text-xs font-bold text-accent hover:text-accent-dark"
-                                            >
-                                                View
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <p className="font-medium text-text">
+                                                    {order.user?.name || "—"}
+                                                </p>
+                                                <p className="text-xs text-text-muted">
+                                                    {order.user?.phone || ""}
+                                                </p>
+                                            </td>
+                                            <td className="px-5 py-3 text-text">
+                                                {itemCount(order)}
+                                            </td>
+                                            <td className="px-5 py-3 font-semibold text-text">
+                                                {formatCurrency(order.pricing?.total)}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <select
+                                                    value={order.status}
+                                                    disabled={updatingId === order._id}
+                                                    onChange={(e) =>
+                                                        handleStatusChange(order, e.target.value)
+                                                    }
+                                                    className="rounded-lg border border-border bg-white px-2 py-1.5 text-xs font-semibold text-text outline-none focus:border-primary"
+                                                >
+                                                    {STATUS_OPTIONS.map((status) => (
+                                                        <option key={status} value={status}>
+                                                            {status}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td className="px-5 py-3 text-right">
+                                                <button
+                                                    onClick={() => setViewing(order)}
+                                                    className="text-xs font-bold text-accent hover:text-accent-dark"
+                                                >
+                                                    View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
 
-                <div className="flex items-center justify-between border-t border-border px-5 py-3">
+            {!isLoading && !error && filtered.length > 0 && (
+                <div className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3">
                     <p className="text-xs text-text-muted">
                         Page {page} of {totalPages}
                     </p>
@@ -302,7 +387,7 @@ export default function OrdersPage() {
                         </button>
                     </div>
                 </div>
-            </div>
+            )}
 
             {viewing && (
                 <Modal title={`Order #${viewing._id}`} onClose={() => setViewing(null)}>

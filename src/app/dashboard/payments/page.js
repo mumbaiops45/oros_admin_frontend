@@ -90,88 +90,147 @@ export default function PaymentsPage() {
                 ))}
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">Txn / Order</th>
-                                <th className="px-5 py-3">Customer</th>
-                                <th className="px-5 py-3">Method</th>
-                                <th className="px-5 py-3">Amount</th>
-                                <th className="px-5 py-3">Paid at</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td colSpan={5} className="px-5 py-10 text-center text-text-muted">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
+            {isLoading && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    Loading...
+                </div>
+            )}
 
-                            {!isLoading && error && (
-                                <tr>
-                                    <td colSpan={5} className="px-5 py-10 text-center text-red-500">
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
+            {!isLoading && error && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-red-500">
+                    {error}
+                </div>
+            )}
 
-                            {!isLoading && !error && rows.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} className="px-5 py-10 text-center text-text-muted">
-                                        No {tab.toLowerCase()} payments
-                                    </td>
-                                </tr>
-                            )}
+            {!isLoading && !error && rows.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    No {tab.toLowerCase()} payments
+                </div>
+            )}
 
-                            {!isLoading &&
-                                !error &&
-                                rows.map((order) => (
-                                    <tr
-                                        key={order._id}
-                                        className="border-b border-border last:border-0"
-                                    >
-                                        <td className="px-5 py-3">
-                                            <p className="font-semibold text-text">
-                                                {order.payment?.transactionId || "—"}
-                                            </p>
-                                            <p className="text-xs text-text-muted">
-                                                #{order._id}
-                                            </p>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <p className="font-medium text-text">
-                                                {order.user?.name || "—"}
-                                            </p>
-                                            <p className="text-xs text-text-muted">
-                                                {order.user?.phone || ""}
-                                            </p>
-                                        </td>
-                                        <td className="px-5 py-3 uppercase text-text-muted">
+            {!isLoading && !error && rows.length > 0 && (
+                <>
+                    {/* Mobile: one card per payment */}
+                    <div className="space-y-3 md:hidden">
+                        {rows.map((order) => (
+                            <div
+                                key={order._id}
+                                className="rounded-2xl border border-border bg-card p-4"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="truncate font-semibold text-text">
+                                            {order.payment?.transactionId || "—"}
+                                        </p>
+                                        <p className="text-xs text-text-muted">
+                                            #{order._id}
+                                        </p>
+                                    </div>
+                                    <p className="shrink-0 font-semibold text-text">
+                                        {formatCurrency(order.pricing?.total)}
+                                    </p>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-sm">
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Customer
+                                        </p>
+                                        <p className="font-medium text-text">
+                                            {order.user?.name || "—"}
+                                        </p>
+                                        <p className="text-xs text-text-muted">
+                                            {order.user?.phone || ""}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Method
+                                        </p>
+                                        <p className="uppercase text-text-muted">
                                             {order.payment?.provider ||
                                                 order.payment?.method ||
                                                 "—"}
-                                        </td>
-                                        <td className="px-5 py-3 font-semibold text-text">
-                                            {formatCurrency(order.pricing?.total)}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
+                                        </p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Paid at
+                                        </p>
+                                        <p className="text-text-muted">
                                             {order.payment?.paidAt
                                                 ? new Date(
                                                       order.payment.paidAt
                                                   ).toLocaleString("en-IN")
                                                 : "—"}
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
 
-                <div className="flex items-center justify-between border-t border-border px-5 py-3">
+                    {/* Desktop / tablet: table */}
+                    <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">Txn / Order</th>
+                                        <th className="px-5 py-3">Customer</th>
+                                        <th className="px-5 py-3">Method</th>
+                                        <th className="px-5 py-3">Amount</th>
+                                        <th className="px-5 py-3">Paid at</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rows.map((order) => (
+                                        <tr
+                                            key={order._id}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3">
+                                                <p className="font-semibold text-text">
+                                                    {order.payment?.transactionId || "—"}
+                                                </p>
+                                                <p className="text-xs text-text-muted">
+                                                    #{order._id}
+                                                </p>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <p className="font-medium text-text">
+                                                    {order.user?.name || "—"}
+                                                </p>
+                                                <p className="text-xs text-text-muted">
+                                                    {order.user?.phone || ""}
+                                                </p>
+                                            </td>
+                                            <td className="px-5 py-3 uppercase text-text-muted">
+                                                {order.payment?.provider ||
+                                                    order.payment?.method ||
+                                                    "—"}
+                                            </td>
+                                            <td className="px-5 py-3 font-semibold text-text">
+                                                {formatCurrency(order.pricing?.total)}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {order.payment?.paidAt
+                                                    ? new Date(
+                                                          order.payment.paidAt
+                                                      ).toLocaleString("en-IN")
+                                                    : "—"}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {!isLoading && !error && rows.length > 0 && (
+                <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3">
                     <p className="text-xs text-text-muted">
                         Page {page} of {totalPages}
                     </p>
@@ -194,7 +253,7 @@ export default function PaymentsPage() {
                         </button>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

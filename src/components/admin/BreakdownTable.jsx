@@ -26,70 +26,94 @@ export default function BreakdownTable({ title, rows = [], isLoading }) {
             </h3>
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full min-w-[420px] text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3"></th>
-                                <th className="px-5 py-3">Orders</th>
-                                <th className="px-5 py-3">Revenue</th>
-                                <th className="px-5 py-3">Share</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td
-                                        colSpan={4}
-                                        className="px-5 py-8 text-center text-text-muted"
+                {isLoading && (
+                    <p className="px-5 py-8 text-center text-sm text-text-muted">
+                        Loading...
+                    </p>
+                )}
+
+                {!isLoading && rows.length === 0 && (
+                    <p className="px-5 py-8 text-center text-sm text-text-muted">
+                        No data in this range
+                    </p>
+                )}
+
+                {!isLoading && rows.length > 0 && (
+                    <>
+                        {/* Mobile: one card per row */}
+                        <div className="space-y-2 p-3 sm:hidden">
+                            {pageRows.map((row) => {
+                                const sharePercent =
+                                    row.sharePercent ??
+                                    (totalRevenue > 0
+                                        ? (row.revenue / totalRevenue) * 100
+                                        : 0);
+
+                                return (
+                                    <div
+                                        key={row.key}
+                                        className="rounded-xl border border-border p-3 text-sm"
                                     >
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading && rows.length === 0 && (
-                                <tr>
-                                    <td
-                                        colSpan={4}
-                                        className="px-5 py-8 text-center text-text-muted"
-                                    >
-                                        No data in this range
-                                    </td>
-                                </tr>
-                            )}
-
-                            {!isLoading &&
-                                pageRows.map((row) => {
-                                    const sharePercent =
-                                        row.sharePercent ??
-                                        (totalRevenue > 0
-                                            ? (row.revenue / totalRevenue) * 100
-                                            : 0);
-
-                                    return (
-                                        <tr
-                                            key={row.key}
-                                            className="border-b border-border last:border-0"
-                                        >
-                                            <td className="px-5 py-3 font-bold uppercase text-text">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-bold uppercase text-text">
                                                 {row.key}
-                                            </td>
-                                            <td className="px-5 py-3 text-text">
-                                                {row.orders}
-                                            </td>
-                                            <td className="px-5 py-3 font-semibold text-text">
+                                            </p>
+                                            <p className="font-semibold text-text">
                                                 {formatCurrency(row.revenue)}
-                                            </td>
-                                            <td className="px-5 py-3 text-text-muted">
-                                                {sharePercent.toFixed(2)}%
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                        </tbody>
-                    </table>
-                </div>
+                                            </p>
+                                        </div>
+                                        <p className="mt-1 text-xs text-text-muted">
+                                            {row.orders} orders · {sharePercent.toFixed(2)}% share
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Tablet / desktop: table */}
+                        <div className="hidden overflow-x-auto sm:block">
+                            <table className="w-full min-w-105 text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3"></th>
+                                        <th className="px-5 py-3">Orders</th>
+                                        <th className="px-5 py-3">Revenue</th>
+                                        <th className="px-5 py-3">Share</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pageRows.map((row) => {
+                                        const sharePercent =
+                                            row.sharePercent ??
+                                            (totalRevenue > 0
+                                                ? (row.revenue / totalRevenue) * 100
+                                                : 0);
+
+                                        return (
+                                            <tr
+                                                key={row.key}
+                                                className="border-b border-border last:border-0"
+                                            >
+                                                <td className="px-5 py-3 font-bold uppercase text-text">
+                                                    {row.key}
+                                                </td>
+                                                <td className="px-5 py-3 text-text">
+                                                    {row.orders}
+                                                </td>
+                                                <td className="px-5 py-3 font-semibold text-text">
+                                                    {formatCurrency(row.revenue)}
+                                                </td>
+                                                <td className="px-5 py-3 text-text-muted">
+                                                    {sharePercent.toFixed(2)}%
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
 
                 {!isLoading && rows.length > PAGE_SIZE && (
                     <Pager

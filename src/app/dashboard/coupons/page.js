@@ -159,90 +159,152 @@ export default function CouponsPage() {
                 </button>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
-                                <th className="px-5 py-3">Code</th>
-                                <th className="px-5 py-3">Type</th>
-                                <th className="px-5 py-3">Value</th>
-                                <th className="px-5 py-3">Min order</th>
-                                <th className="px-5 py-3">Window</th>
-                                <th className="px-5 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-text-muted">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            )}
+            {isLoading && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    Loading...
+                </div>
+            )}
 
-                            {!isLoading && error && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-red-500">
-                                        {error}
-                                    </td>
-                                </tr>
-                            )}
+            {!isLoading && error && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-red-500">
+                    {error}
+                </div>
+            )}
 
-                            {!isLoading && !error && coupons.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-5 py-10 text-center text-text-muted">
-                                        No coupons yet
-                                    </td>
-                                </tr>
-                            )}
+            {!isLoading && !error && coupons.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
+                    No coupons yet
+                </div>
+            )}
 
-                            {!isLoading &&
-                                !error &&
-                                coupons.map((coupon) => (
-                                    <tr
-                                        key={coupon._id}
-                                        className="border-b border-border last:border-0"
-                                    >
-                                        <td className="px-5 py-3 font-bold text-text">
-                                            {coupon.code}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {coupon.discountType}
-                                        </td>
-                                        <td className="px-5 py-3 font-semibold text-text">
+            {!isLoading && !error && coupons.length > 0 && (
+                <>
+                    {/* Mobile: one card per coupon */}
+                    <div className="space-y-3 md:hidden">
+                        {coupons.map((coupon) => (
+                            <div
+                                key={coupon._id}
+                                className="rounded-2xl border border-border bg-card p-4"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <p className="font-bold text-text">{coupon.code}</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => openEdit(coupon)}
+                                            className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(coupon)}
+                                            className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-sm">
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Type
+                                        </p>
+                                        <p className="text-text-muted">{coupon.discountType}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Value
+                                        </p>
+                                        <p className="font-semibold text-text">
                                             {coupon.discountType === "PERCENTAGE"
                                                 ? `${coupon.discountValue}%`
                                                 : formatCurrency(coupon.discountValue)}
-                                        </td>
-                                        <td className="px-5 py-3 text-text">
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Min order
+                                        </p>
+                                        <p className="text-text">
                                             {formatCurrency(coupon.minOrderValue)}
-                                        </td>
-                                        <td className="px-5 py-3 text-text-muted">
-                                            {formatDate(coupon.startDate)} – {formatDate(coupon.endDate)}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEdit(coupon)}
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
-                                                >
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(coupon)}
-                                                    className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold uppercase text-text-muted">
+                                            Window
+                                        </p>
+                                        <p className="text-text-muted">
+                                            {formatDate(coupon.startDate)} –{" "}
+                                            {formatDate(coupon.endDate)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop / tablet: table */}
+                    <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wide text-text-muted">
+                                        <th className="px-5 py-3">Code</th>
+                                        <th className="px-5 py-3">Type</th>
+                                        <th className="px-5 py-3">Value</th>
+                                        <th className="px-5 py-3">Min order</th>
+                                        <th className="px-5 py-3">Window</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                </thead>
+                                <tbody>
+                                    {coupons.map((coupon) => (
+                                        <tr
+                                            key={coupon._id}
+                                            className="border-b border-border last:border-0"
+                                        >
+                                            <td className="px-5 py-3 font-bold text-text">
+                                                {coupon.code}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {coupon.discountType}
+                                            </td>
+                                            <td className="px-5 py-3 font-semibold text-text">
+                                                {coupon.discountType === "PERCENTAGE"
+                                                    ? `${coupon.discountValue}%`
+                                                    : formatCurrency(coupon.discountValue)}
+                                            </td>
+                                            <td className="px-5 py-3 text-text">
+                                                {formatCurrency(coupon.minOrderValue)}
+                                            </td>
+                                            <td className="px-5 py-3 text-text-muted">
+                                                {formatDate(coupon.startDate)} –{" "}
+                                                {formatDate(coupon.endDate)}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => openEdit(coupon)}
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(coupon)}
+                                                        className="rounded-lg border border-border p-2 text-text-muted hover:text-red-500"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {isModalOpen && (
                 <Modal
@@ -260,7 +322,7 @@ export default function CouponsPage() {
                             />
                         </FormField>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="Type">
                                 <select
                                     className={inputClass}
@@ -308,7 +370,7 @@ export default function CouponsPage() {
                             />
                         </FormField>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <FormField label="Start date">
                                 <input
                                     type="date"
