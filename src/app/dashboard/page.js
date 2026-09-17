@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ImageOff } from "lucide-react";
 
+
 import {
     getProductTimeAnalytics,
     getDashboardAnalytics,
@@ -70,6 +71,9 @@ export default function DashboardPage() {
         setCustomersPage(1);
         setTrendPage(1);
     }
+
+
+    
 
     // product engagement table — its own pagination, unaffected by date filters
     useEffect(() => {

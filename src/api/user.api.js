@@ -23,3 +23,17 @@ export const deleteUser = async (id) => {
 
     return data;
 };
+
+export const getProfile = async () => {
+    const { data } = await axiosInstance.get("/user/profile");
+
+    return data;
+};
+
+export const updateProfile = async (payload) => {
+    const { data } = await axiosInstance.patch("/user/profile", payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+
+    return data;
+};

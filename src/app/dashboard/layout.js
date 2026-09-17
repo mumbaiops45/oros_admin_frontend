@@ -9,13 +9,13 @@ import Topbar from "@/components/admin/Topbar";
 import NotificationPanel from "@/components/admin/NotificationPanel";
 import { useAuthStore, ADMIN_ROLES } from "@/store/useAuthStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
-
-const NOTIFICATION_POLL_INTERVAL_MS = 15000;
+import { getSocket, disconnectSocket } from "@/lib/socket";
 
 export default function DashboardLayout({ children }) {
     const router = useRouter();
     const { user, token, hasHydrated } = useAuthStore();
     const fetchNotifications = useNotificationStore((state) => state.fetchNotifications);
+    const addNotification = useNotificationStore((state) => state.addNotification);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const isAuthorized = token && user && ADMIN_ROLES.includes(user.role);
@@ -32,10 +32,25 @@ export default function DashboardLayout({ children }) {
         }
 
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, NOTIFICATION_POLL_INTERVAL_MS);
 
-        return () => clearInterval(interval);
-    }, [isAuthorized, fetchNotifications]);
+        const socket = getSocket();
+
+        const handleNewNotification = (notification) => {
+            addNotification(notification);
+        };
+
+        socket.on("connect", () => {
+            socket.emit("join_admin");
+        });
+        socket.on("new_notification", handleNewNotification);
+
+        socket.connect();
+
+        return () => {
+            socket.off("new_notification", handleNewNotification);
+            disconnectSocket();
+        };
+    }, [isAuthorized, fetchNotifications, addNotification]);
 
     if (!hasHydrated || !isAuthorized) {
         return (

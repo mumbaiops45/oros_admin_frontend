@@ -36,9 +36,10 @@ export default function Sidebar({ open, onClose }) {
                 </div>
 
                 <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-3">
-                    {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
-                        const isActive =
-                            href === "/dashboard"
+                    {NAV_ITEMS.map(({ label, href, icon: Icon, match }) => {
+                        const isActive = match
+                            ? match.some((prefix) => pathname.startsWith(prefix))
+                            : href === "/dashboard"
                                 ? pathname === "/dashboard"
                                 : pathname.startsWith(href);
 

@@ -22,6 +22,16 @@ export const useNotificationStore = create((set, get) => ({
 
     setFilter: (filter) => set({ filter }),
 
+    addNotification: (notification) => {
+        set((state) => {
+            if (state.notifications.some((item) => item._id === notification._id)) {
+                return state;
+            }
+
+            return { notifications: [notification, ...state.notifications] };
+        });
+    },
+
     fetchNotifications: async () => {
         set({ isLoading: true });
 

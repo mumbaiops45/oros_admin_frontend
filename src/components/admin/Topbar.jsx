@@ -20,9 +20,11 @@ export default function Topbar({ onMenuClick }) {
 
     const title =
         NAV_ITEMS.find((item) =>
-            item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(item.href)
+            item.match
+                ? item.match.some((prefix) => pathname.startsWith(prefix))
+                : item.href === "/dashboard"
+                    ? pathname === "/dashboard"
+                    : pathname.startsWith(item.href)
         )?.label || "Dashboard";
 
     const handleLogout = () => {

@@ -5,25 +5,30 @@ import {
     CreditCard,
     Box,
     LayoutGrid,
-    Layers,
     ShoppingCart,
     Tag,
     Users,
     PlusSquare,
-    Image
+    Image,
+    Settings
 } from "lucide-react";
 
 export const NAV_ITEMS = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Orders", href: "/dashboard/orders", icon: Package },
-    { label: "Quotations", href: "/dashboard/quotations", icon: FileText },
-    { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
+    {
+        label: "Categories & Sub categories",
+        href: "/dashboard/categories",
+        icon: LayoutGrid,
+        match: ["/dashboard/categories", "/dashboard/subcategories"]
+    },
     { label: "Products", href: "/dashboard/products", icon: Box },
-    { label: "Categories", href: "/dashboard/categories", icon: LayoutGrid },
-    { label: "Subcategories", href: "/dashboard/subcategories", icon: Layers },
+    { label: "Quotations", href: "/dashboard/quotations", icon: FileText },
+    { label: "Orders", href: "/dashboard/orders", icon: Package },
+    { label: "Users", href: "/dashboard/users", icon: Users },
+    { label: "Reports", href: "/dashboard/payments", icon: CreditCard },
+    { label: "Manual order", href: "/dashboard/manual-order", icon: PlusSquare },
+    { label: "Banners", href: "/dashboard/banners", icon: Image },
     { label: "Abandoned carts", href: "/dashboard/abandoned-carts", icon: ShoppingCart },
     { label: "Coupons", href: "/dashboard/coupons", icon: Tag },
-    { label: "Users", href: "/dashboard/users", icon: Users },
-    { label: "Manual order", href: "/dashboard/manual-order", icon: PlusSquare },
-    { label: "Banners", href: "/dashboard/banners", icon: Image }
+    { label: "Settings", href: "/dashboard/settings", icon: Settings }
 ];

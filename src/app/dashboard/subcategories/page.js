@@ -13,6 +13,7 @@ import { getCategories } from "@/api/category.api";
 import Modal from "@/components/ui/Modal";
 import FormField, { inputClass } from "@/components/ui/FormField";
 import Pager from "@/components/admin/Pager";
+import CategoryTabs from "@/components/admin/CategoryTabs";
 import { extractList } from "@/utils/extractList";
 import { slugify } from "@/utils/format";
 
@@ -179,6 +180,8 @@ export default function SubcategoriesPage() {
 
     return (
         <div>
+            <CategoryTabs />
+
             <div className="mb-5 flex items-center justify-end">
                 <button
                     onClick={openCreate}
