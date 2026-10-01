@@ -8,6 +8,7 @@ import {
     ShoppingCart,
     Tag,
     Users,
+    UserCheck,
     PlusSquare,
     Image,
     Settings
@@ -25,6 +26,7 @@ export const NAV_ITEMS = [
     { label: "Quotations", href: "/dashboard/quotations", icon: FileText },
     { label: "Orders", href: "/dashboard/orders", icon: Package },
     { label: "Users", href: "/dashboard/users", icon: Users },
+    { label: "Customers", href: "/dashboard/customers", icon: UserCheck },
     { label: "Reports", href: "/dashboard/payments", icon: CreditCard },
     { label: "Manual order", href: "/dashboard/manual-order", icon: PlusSquare },
     { label: "Banners", href: "/dashboard/banners", icon: Image },

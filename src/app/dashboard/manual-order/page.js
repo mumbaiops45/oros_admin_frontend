@@ -10,6 +10,7 @@ import { createManualOrder } from "@/api/order.api";
 import Modal from "@/components/ui/Modal";
 import FormField, { inputClass } from "@/components/ui/FormField";
 import { extractList } from "@/utils/extractList";
+import { formatCurrency } from "@/utils/format";
 
 const PAYMENT_METHODS = ["Cash", "UPI", "Card"];
 
@@ -88,6 +89,17 @@ export default function ManualOrderPage() {
         setItems((prev) => prev.filter((_, i) => i !== index));
     };
 
+    const getLinePrice = (item) => {
+        const product = products.find((p) => p._id === item.productId);
+
+        return product ? Number(product.basePrice) || 0 : null;
+    };
+
+    const estimatedSubtotal = items.reduce(
+        (sum, item) => sum + (getLinePrice(item) || 0) * (Number(item.qty) || 0),
+        0
+    );
+
     const handleCreateCustomer = async (event) => {
         event.preventDefault();
         setCustomerError("");
@@ -138,10 +150,10 @@ export default function ManualOrderPage() {
 
         try {
             await createManualOrder({
-                customerId,
-                paymentMethod,
+                userId: customerId,
+                paymentMethod: paymentMethod.toUpperCase(),
                 items: validItems.map((item) => ({
-                    productId: item.productId,
+                    product: item.productId,
                     qty: Number(item.qty)
                 })),
                 note
@@ -213,10 +225,22 @@ export default function ManualOrderPage() {
                                     <option value="">Select product...</option>
                                     {products.map((product) => (
                                         <option key={product._id} value={product._id}>
-                                            {product.name} ({product.sku})
+                                            {product.name} ({product.sku}) ·{" "}
+                                            {formatCurrency(product.basePrice)}
                                         </option>
                                     ))}
                                 </select>
+
+                                {getLinePrice(item) !== null && (
+                                    <span className="text-sm text-text-muted">
+                                        {formatCurrency(getLinePrice(item))} × {item.qty || 0} ={" "}
+                                        <span className="font-semibold text-text">
+                                            {formatCurrency(
+                                                getLinePrice(item) * (Number(item.qty) || 0)
+                                            )}
+                                        </span>
+                                    </span>
+                                )}
 
                                 <input
                                     type="number"
@@ -246,6 +270,12 @@ export default function ManualOrderPage() {
                     >
                         + Add line
                     </button>
+
+                    {estimatedSubtotal > 0 && (
+                        <p className="mt-3 text-sm font-semibold">
+                            Subtotal (before tax): {formatCurrency(estimatedSubtotal)}
+                        </p>
+                    )}
                 </div>
 
                 <FormField label="Note">
