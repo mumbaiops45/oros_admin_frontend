@@ -19,6 +19,10 @@ export default function BreakdownTable({ title, rows = [], isLoading }) {
     const totalRevenue = rows.reduce((sum, row) => sum + (row.revenue || 0), 0);
     const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+    // Some rows come back without a key (e.g. orders with no payment method)
+    const rowLabel = (row) => row.key ?? row._id ?? row.status ?? "—";
+    const rowKey = (row, index) => `${rowLabel(row)}-${index}`;
+
     return (
         <div>
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-muted">
@@ -42,21 +46,21 @@ export default function BreakdownTable({ title, rows = [], isLoading }) {
                     <>
                         {/* Mobile: one card per row */}
                         <div className="space-y-2 p-3 sm:hidden">
-                            {pageRows.map((row) => {
+                            {pageRows.map((row, index) => {
                                 const sharePercent =
                                     row.sharePercent ??
                                     (totalRevenue > 0
-                                        ? (row.revenue / totalRevenue) * 100
+                                        ? ((row.revenue || 0) / totalRevenue) * 100
                                         : 0);
 
                                 return (
                                     <div
-                                        key={row.key}
+                                        key={rowKey(row, index)}
                                         className="rounded-xl border border-border p-3 text-sm"
                                     >
                                         <div className="flex items-center justify-between">
                                             <p className="font-bold uppercase text-text">
-                                                {row.key}
+                                                {rowLabel(row)}
                                             </p>
                                             <p className="font-semibold text-text">
                                                 {formatCurrency(row.revenue)}
@@ -82,20 +86,20 @@ export default function BreakdownTable({ title, rows = [], isLoading }) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {pageRows.map((row) => {
+                                    {pageRows.map((row, index) => {
                                         const sharePercent =
                                             row.sharePercent ??
                                             (totalRevenue > 0
-                                                ? (row.revenue / totalRevenue) * 100
+                                                ? ((row.revenue || 0) / totalRevenue) * 100
                                                 : 0);
 
                                         return (
                                             <tr
-                                                key={row.key}
+                                                key={rowKey(row, index)}
                                                 className="border-b border-border last:border-0"
                                             >
                                                 <td className="px-5 py-3 font-bold uppercase text-text">
-                                                    {row.key}
+                                                    {rowLabel(row)}
                                                 </td>
                                                 <td className="px-5 py-3 text-text">
                                                     {row.orders}
