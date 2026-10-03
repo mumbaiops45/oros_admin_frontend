@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Pencil, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 import { getProducts, getProductById, deleteProduct } from "@/api/product.api";
+import { getCategories } from "@/api/category.api";
+import { getSubCategories } from "@/api/subCategory.api";
 import Modal from "@/components/ui/Modal";
 import Badge from "@/components/ui/Badge";
 import DetailsTab from "@/components/admin/product-tabs/DetailsTab";
@@ -35,8 +37,82 @@ export default function ProductsPage() {
     const [editingProduct, setEditingProduct] = useState(null);
     const [page, setPage] = useState(1);
 
+    const [categories, setCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+    const [category, setCategory] = useState("");
+    const [subcategory, setSubcategory] = useState("");
+    const [searchInput, setSearchInput] = useState("");
+    const [search, setSearch] = useState("");
+
     const [refreshKey, setRefreshKey] = useState(0);
     const reload = () => setRefreshKey((key) => key + 1);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadFilters = async () => {
+            try {
+                const [catRes, subRes] = await Promise.all([
+                    getCategories({ limit: 1000 }),
+                    getSubCategories({ limit: 1000 })
+                ]);
+
+                if (!cancelled) {
+                    setCategories(extractList(catRes?.data, ["categories", "category"]));
+                    setSubCategories(
+                        extractList(subRes?.data, ["subCategories", "subCategory"])
+                    );
+                }
+            } catch {
+                // filters stay empty; the product list still works
+            }
+        };
+
+        loadFilters();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    // Debounce typing so we don't hit the API on every keystroke
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSearch(searchInput.trim());
+            setPage(1);
+        }, 350);
+
+        return () => clearTimeout(timer);
+    }, [searchInput]);
+
+    const visibleSubCategories = category
+        ? subCategories.filter((sub) => {
+              const parent =
+                  typeof sub.category === "object" ? sub.category?._id : sub.category;
+              return parent === category;
+          })
+        : subCategories;
+
+    const handleCategoryChange = (value) => {
+        setCategory(value);
+        setSubcategory("");
+        setPage(1);
+    };
+
+    const handleSubcategoryChange = (value) => {
+        setSubcategory(value);
+        setPage(1);
+    };
+
+    const hasFilters = Boolean(category || subcategory || searchInput);
+
+    const clearFilters = () => {
+        setCategory("");
+        setSubcategory("");
+        setSearchInput("");
+        setSearch("");
+        setPage(1);
+    };
 
     useEffect(() => {
         let cancelled = false;
@@ -46,7 +122,12 @@ export default function ProductsPage() {
             setError("");
 
             try {
-                const res = await getProducts({ page, limit: PAGE_SIZE });
+                const params = { page, limit: PAGE_SIZE };
+                if (search) params.search = search;
+                if (category) params.category = category;
+                if (subcategory) params.subcategory = subcategory;
+
+                const res = await getProducts(params);
                 if (!cancelled) {
                     setProducts(extractList(res?.data, ["products", "product"]));
                 }
@@ -66,7 +147,7 @@ export default function ProductsPage() {
         return () => {
             cancelled = true;
         };
-    }, [page, refreshKey]);
+    }, [page, search, category, subcategory, refreshKey]);
 
     useEffect(() => {
         const openFromLink = async () => {
@@ -135,6 +216,59 @@ export default function ProductsPage() {
                 </button>
             </div>
 
+            <div className="mb-5 flex flex-wrap items-center gap-3">
+                <div className="relative min-w-[200px] flex-1">
+                    <Search
+                        size={15}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+                    />
+                    <input
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        placeholder="Search by name or SKU"
+                        className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-text outline-none focus:border-primary"
+                    />
+                </div>
+
+                <select
+                    value={category}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    aria-label="Filter by category"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-text outline-none focus:border-primary"
+                >
+                    <option value="">All categories</option>
+                    {categories.map((item) => (
+                        <option key={item._id} value={item._id}>
+                            {item.name}
+                        </option>
+                    ))}
+                </select>
+
+                <select
+                    value={subcategory}
+                    onChange={(e) => handleSubcategoryChange(e.target.value)}
+                    aria-label="Filter by subcategory"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-text outline-none focus:border-primary"
+                >
+                    <option value="">All subcategories</option>
+                    {visibleSubCategories.map((item) => (
+                        <option key={item._id} value={item._id}>
+                            {item.name}
+                        </option>
+                    ))}
+                </select>
+
+                {hasFilters && (
+                    <button
+                        onClick={clearFilters}
+                        className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-text-muted hover:text-text"
+                    >
+                        <X size={14} />
+                        Clear
+                    </button>
+                )}
+            </div>
+
             {isLoading && (
                 <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
                     Loading...
@@ -149,7 +283,7 @@ export default function ProductsPage() {
 
             {!isLoading && !error && products.length === 0 && (
                 <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
-                    No products yet
+                    {hasFilters ? "No products match these filters" : "No products yet"}
                 </div>
             )}
 

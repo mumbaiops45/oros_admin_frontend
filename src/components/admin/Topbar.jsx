@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Bell, Menu, LogOut } from "lucide-react";
 
 import { NAV_ITEMS } from "@/config/nav";
+import { getProfile } from "@/api/user.api";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
 
@@ -26,6 +29,31 @@ export default function Topbar({ onMenuClick }) {
                     ? pathname === "/dashboard"
                     : pathname.startsWith(item.href)
         )?.label || "Dashboard";
+
+    // The login response may not carry photo/phone, so refresh from the profile
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadProfile = async () => {
+            try {
+                const res = await getProfile();
+                const profile = res?.data?.user || res?.data;
+                const { user: current, token, setAuth } = useAuthStore.getState();
+
+                if (!cancelled && profile && token) {
+                    setAuth({ user: { ...current, ...profile }, token });
+                }
+            } catch {
+                // keep whatever the store already has
+            }
+        };
+
+        loadProfile();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -58,19 +86,31 @@ export default function Topbar({ onMenuClick }) {
                     )}
                 </button>
 
-                <div className="hidden items-center gap-2 border-l border-border pl-4 sm:flex">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                        {(user?.name || "A").charAt(0).toUpperCase()}
-                    </div>
-                    <div className="leading-tight">
+                <Link
+                    href="/dashboard/settings"
+                    title="View profile"
+                    className="flex items-center gap-2 rounded-lg border-l border-border py-1 pl-3 pr-2 transition hover:bg-bg sm:pl-4"
+                >
+                    {user?.profileImage ? (
+                        <img
+                            src={user.profileImage}
+                            alt={user?.name || "Profile"}
+                            className="h-9 w-9 shrink-0 rounded-full border border-border object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                            {(user?.name || "A").charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                    <div className="hidden leading-tight sm:block">
                         <p className="text-sm font-semibold text-text">
                             {user?.name || "Admin"}
                         </p>
-                        <p className="text-xs capitalize text-text-muted">
-                            {user?.role || ""}
+                        <p className="text-xs text-text-muted">
+                            {user?.phone || user?.role || ""}
                         </p>
                     </div>
-                </div>
+                </Link>
 
                 <button
                     onClick={handleLogout}

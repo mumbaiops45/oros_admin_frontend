@@ -5,6 +5,7 @@ export default function ConfirmDialog({
     description,
     confirmLabel = "Delete",
     cancelLabel = "Cancel",
+    tone = "danger",
     onConfirm,
     onCancel
 }) {
@@ -28,7 +29,11 @@ export default function ConfirmDialog({
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600"
+                        className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold text-white ${
+                            tone === "primary"
+                                ? "bg-primary hover:opacity-90"
+                                : "bg-red-500 hover:bg-red-600"
+                        }`}
                     >
                         {confirmLabel}
                     </button>

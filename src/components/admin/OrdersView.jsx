@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { getAdminOrders, updateOrderStatus } from "@/api/order.api";
 import Modal from "@/components/ui/Modal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Badge from "@/components/ui/Badge";
 import { extractList } from "@/utils/extractList";
 import { formatCurrency, formatDate } from "@/utils/format";
@@ -50,7 +51,8 @@ const SOURCE_TONE = {
     MANUAL: "dark"
 };
 
-export default function OrdersView({ userId = "", customerName = "", onBack }) {
+export default function OrdersView({ userId = "", customerName = "", customer = null, onBack }) {
+    const displayName = customer?.name || customerName || "Customer";
     const router = useRouter();
     const searchParams = useSearchParams();
     const [orders, setOrders] = useState([]);
@@ -60,6 +62,8 @@ export default function OrdersView({ userId = "", customerName = "", onBack }) {
     const [page, setPage] = useState(1);
     const [viewing, setViewing] = useState(null);
     const [updatingId, setUpdatingId] = useState(null);
+    // Status change waiting for the admin to confirm: { order, status }
+    const [pendingStatus, setPendingStatus] = useState(null);
     const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
@@ -120,6 +124,21 @@ export default function OrdersView({ userId = "", customerName = "", onBack }) {
     // Filtering and pagination are done by the server
     const filtered = orders;
 
+    // The select stays on the old status until the admin confirms
+    const requestStatusChange = (order, status) => {
+        if (status === order.status || order.status === "COMPLETED") {
+            return;
+        }
+
+        setPendingStatus({ order, status });
+    };
+
+    const confirmStatusChange = () => {
+        const { order, status } = pendingStatus;
+        setPendingStatus(null);
+        handleStatusChange(order, status);
+    };
+
     const handleStatusChange = async (order, status) => {
         setUpdatingId(order._id);
 
@@ -148,10 +167,48 @@ export default function OrdersView({ userId = "", customerName = "", onBack }) {
     return (
         <div>
             {userId && (
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-5 py-3">
-                    <p className="text-sm font-semibold text-text">
-                        Orders of {customerName || "customer"}
-                    </p>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-5 py-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                        {customer?.profileImage ? (
+                            <img
+                                src={customer.profileImage}
+                                alt={displayName}
+                                className="h-14 w-14 shrink-0 rounded-full border border-border object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
+                                {displayName.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                        <div className="min-w-0 leading-snug">
+                            <p className="truncate text-base font-bold text-text">
+                                {displayName}
+                            </p>
+                            {customer?.phone && (
+                                <p className="text-sm text-text-muted">
+                                    <span className="font-semibold text-text">Phone:</span>{" "}
+                                    {customer.phone}
+                                </p>
+                            )}
+                            {customer?.email && (
+                                <p className="truncate text-sm text-text-muted">
+                                    <span className="font-semibold text-text">Email:</span>{" "}
+                                    {customer.email}
+                                </p>
+                            )}
+                            {(customer?.accountType || customer?.createdAt) && (
+                                <p className="text-xs capitalize text-text-muted">
+                                    {[
+                                        customer.accountType,
+                                        customer.createdAt &&
+                                            `Joined ${formatDate(customer.createdAt)}`
+                                    ]
+                                        .filter(Boolean)
+                                        .join(" · ")}
+                                </p>
+                            )}
+                        </div>
+                    </div>
                     <button
                         onClick={onBack}
                         className="flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-dark"
@@ -267,11 +324,14 @@ export default function OrdersView({ userId = "", customerName = "", onBack }) {
                                     </p>
                                     <select
                                         value={order.status}
-                                        disabled={updatingId === order._id}
-                                        onChange={(e) =>
-                                            handleStatusChange(order, e.target.value)
+                                        disabled={
+                                            updatingId === order._id ||
+                                            order.status === "COMPLETED"
                                         }
-                                        className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-text outline-none focus:border-primary"
+                                        onChange={(e) =>
+                                            requestStatusChange(order, e.target.value)
+                                        }
+                                        className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
                                     >
                                         {STATUS_OPTIONS.map((status) => (
                                             <option key={status} value={status}>
@@ -351,11 +411,14 @@ export default function OrdersView({ userId = "", customerName = "", onBack }) {
                                             <td className="px-5 py-3">
                                                 <select
                                                     value={order.status}
-                                                    disabled={updatingId === order._id}
-                                                    onChange={(e) =>
-                                                        handleStatusChange(order, e.target.value)
+                                                    disabled={
+                                                        updatingId === order._id ||
+                                                        order.status === "COMPLETED"
                                                     }
-                                                    className="rounded-lg border border-border bg-white px-2 py-1.5 text-xs font-semibold text-text outline-none focus:border-primary"
+                                                    onChange={(e) =>
+                                                        requestStatusChange(order, e.target.value)
+                                                    }
+                                                    className="rounded-lg border border-border bg-white px-2 py-1.5 text-xs font-semibold text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
                                                 >
                                                     {STATUS_OPTIONS.map((status) => (
                                                         <option key={status} value={status}>
@@ -405,6 +468,52 @@ export default function OrdersView({ userId = "", customerName = "", onBack }) {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {pendingStatus && pendingStatus.status === "COMPLETED" && (
+                <ConfirmDialog
+                    title="Mark order as completed?"
+                    description={
+                        <>
+                            You are changing this order from{" "}
+                            <span className="font-semibold text-text">
+                                {pendingStatus.order.status}
+                            </span>{" "}
+                            to{" "}
+                            <span className="font-semibold text-text">COMPLETED</span>.
+                            <span className="mt-3 block rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-600">
+                                Once an order is completed, its status cannot be
+                                changed again.
+                            </span>
+                        </>
+                    }
+                    confirmLabel="Yes, complete order"
+                    onConfirm={confirmStatusChange}
+                    onCancel={() => setPendingStatus(null)}
+                />
+            )}
+
+            {pendingStatus && pendingStatus.status !== "COMPLETED" && (
+                <ConfirmDialog
+                    title="Change order status?"
+                    description={
+                        <>
+                            Do you want to change this order from{" "}
+                            <span className="font-semibold text-text">
+                                {pendingStatus.order.status}
+                            </span>{" "}
+                            to{" "}
+                            <span className="font-semibold text-text">
+                                {pendingStatus.status}
+                            </span>
+                            ?
+                        </>
+                    }
+                    confirmLabel="Yes, change"
+                    tone="primary"
+                    onConfirm={confirmStatusChange}
+                    onCancel={() => setPendingStatus(null)}
+                />
             )}
 
             {viewing && (

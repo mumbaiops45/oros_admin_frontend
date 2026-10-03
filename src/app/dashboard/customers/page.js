@@ -63,6 +63,7 @@ export default function CustomersPage() {
             <OrdersView
                 userId={selected._id}
                 customerName={selected.name}
+                customer={selected}
                 onBack={() => setSelected(null)}
             />
         );
