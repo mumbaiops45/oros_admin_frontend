@@ -107,7 +107,6 @@ export default function TeamPage() {
                     name: form.name,
                     phone: form.phone,
                     email: form.email,
-                    role: form.role,
                     isBlocked: form.isBlocked
                 });
             } else {
@@ -115,7 +114,7 @@ export default function TeamPage() {
                     name: form.name,
                     phone: form.phone,
                     email: form.email,
-                    role: form.role
+                    role: "staff"
                 });
             }
 
@@ -171,7 +170,7 @@ export default function TeamPage() {
                     className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-dark"
                 >
                     <Plus size={16} />
-                    New team member
+                    New staff
                 </button>
             </div>
 
@@ -301,7 +300,7 @@ export default function TeamPage() {
 
             {isModalOpen && (
                 <Modal
-                    title={editing ? "Edit team member" : "New team member"}
+                    title={editing ? "Edit team member" : "New staff"}
                     onClose={() => setIsModalOpen(false)}
                 >
                     <form onSubmit={handleSave} className="space-y-4">
@@ -336,17 +335,13 @@ export default function TeamPage() {
                             />
                         </FormField>
 
+                        {/* Team tab can only add staff; existing roles are shown, not changed */}
                         <FormField label="Role">
-                            <select
-                                className={inputClass}
+                            <input
+                                className={`${inputClass} capitalize`}
                                 value={form.role}
-                                onChange={(e) =>
-                                    setForm((prev) => ({ ...prev, role: e.target.value }))
-                                }
-                            >
-                                <option value="staff">Staff</option>
-                                <option value="admin">Admin</option>
-                            </select>
+                                disabled
+                            />
                         </FormField>
 
                         {editing && (
