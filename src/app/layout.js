@@ -28,11 +28,16 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
+    // browser extensions (Grammarly, ColorZilla, password managers...) inject
+    // attributes on <html>/<body> before React hydrates; ignore those diffs
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

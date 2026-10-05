@@ -10,6 +10,7 @@ import {
     deleteProductShipping
 } from "@/api/product.api";
 import FormField, { inputClass } from "@/components/ui/FormField";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 const resolveRecord = (data) => {
     if (!data) return null;
@@ -92,14 +93,14 @@ export default function ShippingTab({ productId }) {
     };
 
     const handleDelete = async () => {
-        if (!record || !window.confirm("Remove shipping details?")) return;
+        if (!record || !(await confirmDialog({ title: "Remove shipping details?", confirmLabel: "Remove" }))) return;
 
         try {
             await deleteProductShipping(record._id);
             setRecord(null);
             setForm({ weight: "", length: "", width: "", height: "" });
         } catch (err) {
-            window.alert(err.message || "Failed to delete shipping info");
+            alertDialog(err.message || "Failed to delete shipping info");
         }
     };
 

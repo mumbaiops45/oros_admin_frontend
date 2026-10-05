@@ -25,7 +25,7 @@ export const NAV_ITEMS = [
     { label: "Products", href: "/dashboard/products", icon: Box },
     { label: "Quotations", href: "/dashboard/quotations", icon: FileText },
     { label: "Orders", href: "/dashboard/orders", icon: Package },
-    { label: "Users", href: "/dashboard/users", icon: Users },
+    { label: "Team", href: "/dashboard/users", icon: Users },
     { label: "Customers", href: "/dashboard/customers", icon: UserCheck },
     { label: "Reports", href: "/dashboard/payments", icon: CreditCard },
     { label: "Manual order", href: "/dashboard/manual-order", icon: PlusSquare },

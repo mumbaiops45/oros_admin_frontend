@@ -17,6 +17,8 @@ import PriceSlabsTab from "@/components/admin/product-tabs/PriceSlabsTab";
 import ShippingTab from "@/components/admin/product-tabs/ShippingTab";
 import { extractList } from "@/utils/extractList";
 import { formatCurrency } from "@/utils/format";
+import BulkImportModal, { downloadTemplateFile } from "@/components/admin/BulkImportModal";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 const TABS = ["Details", "Media", "Specs", "Options & values", "Price slabs", "Shipping"];
 const PAGE_SIZE = 8;
@@ -35,6 +37,7 @@ export default function ProductsPage() {
     const [error, setError] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    const [isBulkOpen, setIsBulkOpen] = useState(false);
     const [page, setPage] = useState(1);
 
     const [categories, setCategories] = useState([]);
@@ -182,13 +185,13 @@ export default function ProductsPage() {
     };
 
     const handleDelete = async (product) => {
-        if (!window.confirm(`Delete product "${product.name}"?`)) return;
+        if (!(await confirmDialog({ title: "Delete product?", description: `"${product.name}" will be removed permanently.` }))) return;
 
         try {
             await deleteProduct(product._id);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete product");
+            alertDialog(err.message || "Failed to delete product");
         }
     };
 
@@ -199,10 +202,20 @@ export default function ProductsPage() {
         <div>
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap gap-2">
-                    <button className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-text hover:bg-bg">
+                    <button
+                        onClick={() =>
+                            downloadTemplateFile().catch((err) =>
+                                alertDialog(err.message || "Failed to download template")
+                            )
+                        }
+                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-text hover:bg-bg"
+                    >
                         Sample .xlsx
                     </button>
-                    <button className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-text hover:bg-bg">
+                    <button
+                        onClick={() => setIsBulkOpen(true)}
+                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-text hover:bg-bg"
+                    >
                         Bulk import
                     </button>
                 </div>
@@ -445,6 +458,13 @@ export default function ProductsPage() {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {isBulkOpen && (
+                <BulkImportModal
+                    onClose={() => setIsBulkOpen(false)}
+                    onImported={reload}
+                />
             )}
 
             {isModalOpen && (

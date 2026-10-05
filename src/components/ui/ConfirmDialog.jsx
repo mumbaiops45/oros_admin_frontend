@@ -6,6 +6,7 @@ export default function ConfirmDialog({
     confirmLabel = "Delete",
     cancelLabel = "Cancel",
     tone = "danger",
+    hideCancel = false,
     onConfirm,
     onCancel
 }) {
@@ -21,12 +22,14 @@ export default function ConfirmDialog({
                 )}
 
                 <div className="mt-6 flex gap-3">
-                    <button
-                        onClick={onCancel}
-                        className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-bg"
-                    >
-                        {cancelLabel}
-                    </button>
+                    {!hideCancel && (
+                        <button
+                            onClick={onCancel}
+                            className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-bg"
+                        >
+                            {cancelLabel}
+                        </button>
+                    )}
                     <button
                         onClick={onConfirm}
                         className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold text-white ${

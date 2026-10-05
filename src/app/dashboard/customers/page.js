@@ -1,12 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
+import { Plus, Pencil, Search } from "lucide-react";
 
 import OrdersView from "@/components/admin/OrdersView";
-import { getUsers } from "@/api/user.api";
+import { getUsers, createUser, updateUser } from "@/api/user.api";
+import Badge from "@/components/ui/Badge";
+import Modal from "@/components/ui/Modal";
+import FormField, { inputClass } from "@/components/ui/FormField";
 import { extractList } from "@/utils/extractList";
 import { formatDate } from "@/utils/format";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
+
+const EMPTY_FORM = {
+    name: "",
+    phone: "",
+    email: "",
+    role: "user"
+};
+
+const ROLE_LABEL = {
+    user: "Customer",
+    staff: "Staff",
+    admin: "Admin"
+};
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState([]);
@@ -15,6 +32,13 @@ export default function CustomersPage() {
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
     const [submittedSearch, setSubmittedSearch] = useState("");
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editing, setEditing] = useState(null);
+    const [form, setForm] = useState(EMPTY_FORM);
+    const [isSaving, setIsSaving] = useState(false);
+    const [formError, setFormError] = useState("");
 
     useEffect(() => {
         let cancelled = false;
@@ -47,7 +71,7 @@ export default function CustomersPage() {
         return () => {
             cancelled = true;
         };
-    }, [submittedSearch]);
+    }, [submittedSearch, refreshKey]);
 
     const handleSearch = (event) => {
         event.preventDefault();
@@ -57,6 +81,126 @@ export default function CustomersPage() {
     const openOrders = (customer) => {
         setSelected(customer);
     };
+
+    const openCreate = () => {
+        setEditing(null);
+        setForm(EMPTY_FORM);
+        setFormError("");
+        setIsModalOpen(true);
+    };
+
+    const openEdit = (event, customer) => {
+        // row/card click opens orders; keep the button from triggering it
+        event.stopPropagation();
+
+        setEditing(customer);
+        setForm({
+            name: customer.name || "",
+            phone: customer.phone || "",
+            email: customer.email || "",
+            role: customer.role || "user"
+        });
+        setFormError("");
+        setIsModalOpen(true);
+    };
+
+    const handleSave = async (event) => {
+        event.preventDefault();
+        setFormError("");
+
+        if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) {
+            setFormError("Name, phone and email are required");
+            return;
+        }
+
+        if (editing && form.role !== "user") {
+            const label = ROLE_LABEL[form.role];
+            const confirmed = await confirmDialog({
+                title: `Make ${label}?`,
+                description: `"${form.name}" will get ${label.toLowerCase()} access to the admin panel and move from Customers to the Team tab.`,
+                confirmLabel: "Change role",
+                tone: "primary"
+            });
+            if (!confirmed) return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            const payload = {
+                name: form.name,
+                phone: form.phone,
+                email: form.email,
+                // new entries from this tab are always customers
+                role: editing ? form.role : "user"
+            };
+
+            if (editing) {
+                await updateUser(editing._id, payload);
+            } else {
+                await createUser(payload);
+            }
+
+            setIsModalOpen(false);
+            setRefreshKey((key) => key + 1);
+        } catch (err) {
+            setFormError(err.message || "Failed to save customer");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const editButton = (customer) => (
+        <button
+            onClick={(event) => openEdit(event, customer)}
+            title="Edit / change role"
+            className="rounded-lg border border-border p-2 text-text-muted hover:text-text"
+        >
+            <Pencil size={14} />
+        </button>
+    );
+
+    const toggleBlock = async (event, customer) => {
+        // row/card click opens orders; keep the button from triggering it
+        event.stopPropagation();
+
+        const action = customer.isBlocked ? "Unblock" : "Block";
+        const confirmed = await confirmDialog({
+            title: `${action} customer?`,
+            description: customer.isBlocked
+                ? `"${customer.name || customer.phone}" will be able to log in and order again.`
+                : `"${customer.name || customer.phone}" will not be able to log in or place orders.`,
+            confirmLabel: action,
+            tone: customer.isBlocked ? "primary" : "danger"
+        });
+        if (!confirmed) return;
+
+        try {
+            await updateUser(customer._id, { isBlocked: !customer.isBlocked });
+            setRefreshKey((key) => key + 1);
+        } catch (err) {
+            alertDialog(err.message || "Failed to update customer");
+        }
+    };
+
+    const blockButton = (customer, padding) => (
+        <button
+            onClick={(event) => toggleBlock(event, customer)}
+            className={`rounded-lg px-3 ${padding} text-xs font-bold ${
+                customer.isBlocked
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-red-50 text-red-500"
+            }`}
+        >
+            {customer.isBlocked ? "Unblock" : "Block"}
+        </button>
+    );
+
+    const statusBadge = (customer) => (
+        <Badge tone={customer.isBlocked ? "danger" : "success"}>
+            {customer.isBlocked ? "Blocked" : "Active"}
+        </Badge>
+    );
 
     if (selected) {
         return (
@@ -86,6 +230,14 @@ export default function CustomersPage() {
                         />
                     </div>
                 </form>
+
+                <button
+                    onClick={openCreate}
+                    className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-dark"
+                >
+                    <Plus size={16} />
+                    New customer
+                </button>
             </div>
 
             {isLoading && (
@@ -111,10 +263,10 @@ export default function CustomersPage() {
                     {/* Mobile: one card per customer */}
                     <div className="space-y-3 md:hidden">
                         {customers.map((customer) => (
-                            <button
+                            <div
                                 key={customer._id}
                                 onClick={() => openOrders(customer)}
-                                className="block w-full rounded-2xl border border-border bg-card p-4 text-left"
+                                className="block w-full cursor-pointer rounded-2xl border border-border bg-card p-4 text-left"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
@@ -128,11 +280,19 @@ export default function CustomersPage() {
                                             {customer.email}
                                         </p>
                                     </div>
-                                    <span className="shrink-0 text-xs font-bold text-accent">
+                                    {statusBadge(customer)}
+                                </div>
+
+                                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                                    <span className="text-xs font-bold text-accent">
                                         View orders
                                     </span>
+                                    <div className="flex items-center gap-2">
+                                        {blockButton(customer, "py-2")}
+                                        {editButton(customer)}
+                                    </div>
                                 </div>
-                            </button>
+                            </div>
                         ))}
                     </div>
 
@@ -147,6 +307,7 @@ export default function CustomersPage() {
                                         <th className="px-5 py-3">Email</th>
                                         <th className="px-5 py-3">Type</th>
                                         <th className="px-5 py-3">Joined</th>
+                                        <th className="px-5 py-3">Status</th>
                                         <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -172,10 +333,17 @@ export default function CustomersPage() {
                                             <td className="px-5 py-3 text-text-muted">
                                                 {formatDate(customer.createdAt)}
                                             </td>
-                                            <td className="px-5 py-3 text-right">
-                                                <span className="text-xs font-bold text-accent hover:text-accent-dark">
-                                                    View orders
-                                                </span>
+                                            <td className="px-5 py-3">
+                                                {statusBadge(customer)}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center justify-end gap-3">
+                                                    <span className="text-xs font-bold text-accent hover:text-accent-dark">
+                                                        View orders
+                                                    </span>
+                                                    {blockButton(customer, "py-2.5")}
+                                                    {editButton(customer)}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -184,6 +352,76 @@ export default function CustomersPage() {
                         </div>
                     </div>
                 </>
+            )}
+
+            {isModalOpen && (
+                <Modal
+                    title={editing ? "Edit customer" : "New customer"}
+                    onClose={() => setIsModalOpen(false)}
+                >
+                    <form onSubmit={handleSave} className="space-y-4">
+                        <FormField label="Name">
+                            <input
+                                className={inputClass}
+                                value={form.name}
+                                onChange={(e) =>
+                                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                                }
+                            />
+                        </FormField>
+
+                        <FormField label="Phone">
+                            <input
+                                className={inputClass}
+                                value={form.phone}
+                                onChange={(e) =>
+                                    setForm((prev) => ({ ...prev, phone: e.target.value }))
+                                }
+                            />
+                        </FormField>
+
+                        <FormField label="Email">
+                            <input
+                                type="email"
+                                className={inputClass}
+                                value={form.email}
+                                onChange={(e) =>
+                                    setForm((prev) => ({ ...prev, email: e.target.value }))
+                                }
+                            />
+                        </FormField>
+
+                        {editing && (
+                            <FormField label="Role">
+                                <select
+                                    className={inputClass}
+                                    value={form.role}
+                                    onChange={(e) =>
+                                        setForm((prev) => ({ ...prev, role: e.target.value }))
+                                    }
+                                >
+                                    <option value="user">Customer</option>
+                                    <option value="staff">Staff</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </FormField>
+                        )}
+
+                        {formError && (
+                            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                                {formError}
+                            </p>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={isSaving}
+                            className="w-full rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-dark disabled:opacity-70"
+                        >
+                            {isSaving ? "Saving..." : editing ? "Save changes" : "Add customer"}
+                        </button>
+                    </form>
+                </Modal>
             )}
         </div>
     );

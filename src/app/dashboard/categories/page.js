@@ -15,6 +15,7 @@ import Pager from "@/components/admin/Pager";
 import CategoryTabs from "@/components/admin/CategoryTabs";
 import { extractList } from "@/utils/extractList";
 import { slugify } from "@/utils/format";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 const EMPTY_FORM = {
     name: "",
@@ -139,7 +140,7 @@ export default function CategoriesPage() {
     };
 
     const handleDelete = async (category) => {
-        if (!window.confirm(`Delete category "${category.name}"?`)) {
+        if (!(await confirmDialog({ title: "Delete category?", description: `"${category.name}" will be removed permanently.` }))) {
             return;
         }
 
@@ -147,7 +148,7 @@ export default function CategoriesPage() {
             await deleteCategory(category._id);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete category");
+            alertDialog(err.message || "Failed to delete category");
         }
     };
 

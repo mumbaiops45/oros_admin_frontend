@@ -13,6 +13,7 @@ import Modal from "@/components/ui/Modal";
 import FormField, { inputClass } from "@/components/ui/FormField";
 import { extractList } from "@/utils/extractList";
 import { formatCurrency, formatDate } from "@/utils/format";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 const EMPTY_FORM = {
     code: "",
@@ -135,7 +136,7 @@ export default function CouponsPage() {
     };
 
     const handleDelete = async (coupon) => {
-        if (!window.confirm(`Delete coupon "${coupon.code}"?`)) {
+        if (!(await confirmDialog({ title: "Delete coupon?", description: `Coupon "${coupon.code}" will be removed permanently.` }))) {
             return;
         }
 
@@ -143,7 +144,7 @@ export default function CouponsPage() {
             await deleteCoupon(coupon._id);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete coupon");
+            alertDialog(err.message || "Failed to delete coupon");
         }
     };
 

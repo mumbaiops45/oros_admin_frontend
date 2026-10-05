@@ -10,6 +10,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Badge from "@/components/ui/Badge";
 import { extractList } from "@/utils/extractList";
 import { formatCurrency, formatDate } from "@/utils/format";
+import { alertDialog } from "@/store/useDialogStore";
 
 const TABS = ["All", "Paid", "Unpaid", "Cancelled", "Store", "Quotation", "Manual"];
 const PAGE_SIZE = 8;
@@ -148,7 +149,7 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                 prev.map((o) => (o._id === order._id ? { ...o, status } : o))
             );
         } catch (err) {
-            window.alert(err.message || "Failed to update order status");
+            alertDialog(err.message || "Failed to update order status");
         } finally {
             setUpdatingId(null);
         }

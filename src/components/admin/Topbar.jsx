@@ -9,6 +9,7 @@ import { NAV_ITEMS } from "@/config/nav";
 import { getProfile } from "@/api/user.api";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
+import { confirmDialog } from "@/store/useDialogStore";
 
 export default function Topbar({ onMenuClick }) {
     const router = useRouter();
@@ -55,7 +56,15 @@ export default function Topbar({ onMenuClick }) {
         };
     }, []);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        const confirmed = await confirmDialog({
+            title: "Log out?",
+            description: "You will need to log in again to access the admin panel.",
+            confirmLabel: "Log out",
+            tone: "primary"
+        });
+        if (!confirmed) return;
+
         logout();
         router.replace("/");
     };

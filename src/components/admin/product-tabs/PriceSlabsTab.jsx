@@ -10,6 +10,7 @@ import {
 } from "@/api/product.api";
 import { inputClass } from "@/components/ui/FormField";
 import { extractList } from "@/utils/extractList";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 export default function PriceSlabsTab({ productId }) {
     const [slabs, setSlabs] = useState([]);
@@ -61,11 +62,13 @@ export default function PriceSlabsTab({ productId }) {
     };
 
     const handleDelete = async (slabId) => {
+        if (!(await confirmDialog({ title: "Delete price slab?" }))) return;
+
         try {
             await deletePriceSlab(productId, slabId);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete price slab");
+            alertDialog(err.message || "Failed to delete price slab");
         }
     };
 

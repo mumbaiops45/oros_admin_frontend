@@ -13,6 +13,7 @@ import {
 } from "@/api/product.api";
 import { inputClass } from "@/components/ui/FormField";
 import { extractList } from "@/utils/extractList";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 const OPTION_TYPES = ["SELECT", "TEXT", "COLOR", "FILE"];
 
@@ -85,11 +86,13 @@ export default function OptionsTab({ productId }) {
     };
 
     const handleDeleteOption = async (optionId) => {
+        if (!(await confirmDialog({ title: "Delete option?", description: "The option and all its values will be removed." }))) return;
+
         try {
             await deleteProductOption(productId, optionId);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete option");
+            alertDialog(err.message || "Failed to delete option");
         }
     };
 
@@ -106,16 +109,18 @@ export default function OptionsTab({ productId }) {
             setNewValue((prev) => ({ ...prev, [optionId]: {} }));
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to add value");
+            alertDialog(err.message || "Failed to add value");
         }
     };
 
     const handleDeleteValue = async (optionId, valueId) => {
+        if (!(await confirmDialog({ title: "Delete value?" }))) return;
+
         try {
             await deleteOptionValue(optionId, valueId);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete value");
+            alertDialog(err.message || "Failed to delete value");
         }
     };
 

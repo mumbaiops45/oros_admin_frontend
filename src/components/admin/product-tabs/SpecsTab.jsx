@@ -10,6 +10,7 @@ import {
 } from "@/api/product.api";
 import { inputClass } from "@/components/ui/FormField";
 import { extractList } from "@/utils/extractList";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 export default function SpecsTab({ productId }) {
     const [specs, setSpecs] = useState([]);
@@ -63,11 +64,13 @@ export default function SpecsTab({ productId }) {
     };
 
     const handleDelete = async (specId) => {
+        if (!(await confirmDialog({ title: "Delete spec?" }))) return;
+
         try {
             await deleteProductSpec(productId, specId);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete spec");
+            alertDialog(err.message || "Failed to delete spec");
         }
     };
 

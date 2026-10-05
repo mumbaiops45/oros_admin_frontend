@@ -7,16 +7,17 @@ import { getUsers, createUser, updateUser } from "@/api/user.api";
 import Modal from "@/components/ui/Modal";
 import FormField, { inputClass } from "@/components/ui/FormField";
 import { extractList } from "@/utils/extractList";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 const EMPTY_FORM = {
     name: "",
     phone: "",
     email: "",
-    role: "user",
+    role: "staff",
     isBlocked: false
 };
 
-export default function UsersPage() {
+export default function TeamPage() {
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
@@ -39,15 +40,16 @@ export default function UsersPage() {
             setError("");
 
             try {
-                const res = await getUsers(
-                    submittedSearch ? { phone: submittedSearch } : {}
-                );
+                const res = await getUsers({
+                    role: "team",
+                    ...(submittedSearch ? { phone: submittedSearch } : {})
+                });
                 if (!cancelled) {
                     setUsers(extractList(res?.data, ["users", "user"]));
                 }
             } catch (err) {
                 if (!cancelled) {
-                    setError(err.message || "Failed to load users");
+                    setError(err.message || "Failed to load team members");
                 }
             } finally {
                 if (!cancelled) {
@@ -81,7 +83,7 @@ export default function UsersPage() {
             name: user.name || "",
             phone: user.phone || "",
             email: user.email || "",
-            role: user.role || "user",
+            role: user.role || "staff",
             isBlocked: user.isBlocked || false
         });
         setFormError("");
@@ -120,18 +122,29 @@ export default function UsersPage() {
             setIsModalOpen(false);
             reload();
         } catch (err) {
-            setFormError(err.message || "Failed to save user");
+            setFormError(err.message || "Failed to save team member");
         } finally {
             setIsSaving(false);
         }
     };
 
     const toggleBlock = async (user) => {
+        const action = user.isBlocked ? "Unblock" : "Block";
+        const confirmed = await confirmDialog({
+            title: `${action} team member?`,
+            description: user.isBlocked
+                ? `"${user.name || user.phone}" will be able to log in again.`
+                : `"${user.name || user.phone}" will not be able to log in.`,
+            confirmLabel: action,
+            tone: user.isBlocked ? "primary" : "danger"
+        });
+        if (!confirmed) return;
+
         try {
             await updateUser(user._id, { isBlocked: !user.isBlocked });
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to update user");
+            alertDialog(err.message || "Failed to update team member");
         }
     };
 
@@ -158,7 +171,7 @@ export default function UsersPage() {
                     className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-dark"
                 >
                     <Plus size={16} />
-                    New user
+                    New team member
                 </button>
             </div>
 
@@ -176,13 +189,13 @@ export default function UsersPage() {
 
             {!isLoading && !error && users.length === 0 && (
                 <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
-                    No users found
+                    No team members found
                 </div>
             )}
 
             {!isLoading && !error && users.length > 0 && (
                 <>
-                    {/* Mobile: one card per user */}
+                    {/* Mobile: one card per team member */}
                     <div className="space-y-3 md:hidden">
                         {users.map((user) => (
                             <div
@@ -210,8 +223,6 @@ export default function UsersPage() {
                                 <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
                                     <p className="text-xs text-text-muted">
                                         <span className="capitalize text-text">{user.role}</span>
-                                        {" · "}
-                                        <span className="capitalize">{user.accountType}</span>
                                     </p>
                                     <button
                                         onClick={() => toggleBlock(user)}
@@ -238,7 +249,6 @@ export default function UsersPage() {
                                         <th className="px-5 py-3">Phone</th>
                                         <th className="px-5 py-3">Email</th>
                                         <th className="px-5 py-3">Role</th>
-                                        <th className="px-5 py-3">Type</th>
                                         <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -259,9 +269,6 @@ export default function UsersPage() {
                                             </td>
                                             <td className="px-5 py-3 capitalize text-text">
                                                 {user.role}
-                                            </td>
-                                            <td className="px-5 py-3 capitalize text-text-muted">
-                                                {user.accountType}
                                             </td>
                                             <td className="px-5 py-3">
                                                 <div className="flex justify-end gap-2">
@@ -294,7 +301,7 @@ export default function UsersPage() {
 
             {isModalOpen && (
                 <Modal
-                    title={editing ? "Edit user" : "New user"}
+                    title={editing ? "Edit team member" : "New team member"}
                     onClose={() => setIsModalOpen(false)}
                 >
                     <form onSubmit={handleSave} className="space-y-4">
@@ -337,7 +344,6 @@ export default function UsersPage() {
                                     setForm((prev) => ({ ...prev, role: e.target.value }))
                                 }
                             >
-                                <option value="user">Customer</option>
                                 <option value="staff">Staff</option>
                                 <option value="admin">Admin</option>
                             </select>

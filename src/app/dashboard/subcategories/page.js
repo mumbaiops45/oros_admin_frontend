@@ -16,6 +16,7 @@ import Pager from "@/components/admin/Pager";
 import CategoryTabs from "@/components/admin/CategoryTabs";
 import { extractList } from "@/utils/extractList";
 import { slugify } from "@/utils/format";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 const EMPTY_FORM = {
     name: "",
@@ -164,7 +165,7 @@ export default function SubcategoriesPage() {
     };
 
     const handleDelete = async (subCategory) => {
-        if (!window.confirm(`Delete subcategory "${subCategory.name}"?`)) {
+        if (!(await confirmDialog({ title: "Delete subcategory?", description: `"${subCategory.name}" will be removed permanently.` }))) {
             return;
         }
 
@@ -172,7 +173,7 @@ export default function SubcategoriesPage() {
             await deleteSubCategory(subCategory._id);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete subcategory");
+            alertDialog(err.message || "Failed to delete subcategory");
         }
     };
 

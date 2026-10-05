@@ -10,6 +10,7 @@ import {
     deleteProductMedia
 } from "@/api/product.api";
 import { extractList } from "@/utils/extractList";
+import { confirmDialog, alertDialog } from "@/store/useDialogStore";
 
 export default function MediaTab({ productId }) {
     const [media, setMedia] = useState([]);
@@ -90,18 +91,18 @@ export default function MediaTab({ productId }) {
             await updateProductMedia(productId, mediaId, { isPrimary: true });
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to set primary media");
+            alertDialog(err.message || "Failed to set primary media");
         }
     };
 
     const handleDelete = async (mediaId) => {
-        if (!window.confirm("Remove this media file?")) return;
+        if (!(await confirmDialog({ title: "Remove media?", description: "This file will be removed from the product.", confirmLabel: "Remove" }))) return;
 
         try {
             await deleteProductMedia(productId, mediaId);
             reload();
         } catch (err) {
-            window.alert(err.message || "Failed to delete media");
+            alertDialog(err.message || "Failed to delete media");
         }
     };
 
