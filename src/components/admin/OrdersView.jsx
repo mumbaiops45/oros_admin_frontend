@@ -155,8 +155,14 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
         }
     };
 
-    const itemCount = (order) =>
-        order.items?.length ?? order.orderItems?.length ?? 0;
+    const orderItems = (order) => order.items || order.orderItems || [];
+
+    const itemCount = (order) => orderItems(order).length;
+
+    const itemName = (item) =>
+        item.nameSnapshot || item.product?.name || "Product";
+
+    const itemNames = (order) => orderItems(order).map(itemName).join(", ");
 
     const pageRows = filtered;
 
@@ -317,6 +323,14 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                             {formatCurrency(order.pricing?.total)}
                                         </p>
                                     </div>
+                                    {itemCount(order) > 0 && (
+                                        <div className="col-span-2">
+                                            <p className="text-xs font-bold uppercase text-text-muted">
+                                                Products
+                                            </p>
+                                            <p className="text-text">{itemNames(order)}</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="mt-3 border-t border-border pt-3">
@@ -403,8 +417,16 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                                     {order.user?.phone || ""}
                                                 </p>
                                             </td>
-                                            <td className="px-5 py-3 text-text">
-                                                {itemCount(order)}
+                                            <td className="max-w-56 px-5 py-3 text-text">
+                                                <p>{itemCount(order)}</p>
+                                                {itemCount(order) > 0 && (
+                                                    <p
+                                                        className="truncate text-xs text-text-muted"
+                                                        title={itemNames(order)}
+                                                    >
+                                                        {itemNames(order)}
+                                                    </p>
+                                                )}
                                             </td>
                                             <td className="px-5 py-3 font-semibold text-text">
                                                 {formatCurrency(order.pricing?.total)}
@@ -562,6 +584,43 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                     {viewing.shippingAddress.state} –{" "}
                                     {viewing.shippingAddress.pincode}
                                 </p>
+                            </div>
+                        )}
+
+                        {itemCount(viewing) > 0 && (
+                            <div>
+                                <p className="mb-1 text-xs font-bold uppercase text-text-muted">
+                                    Items
+                                </p>
+                                <div className="divide-y divide-border rounded-xl border border-border">
+                                    {orderItems(viewing).map((item, index) => (
+                                        <div
+                                            key={item._id || index}
+                                            className="flex items-start justify-between gap-3 px-3 py-2"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-text">
+                                                    {itemName(item)}
+                                                </p>
+                                                <p className="text-xs text-text-muted">
+                                                    {[
+                                                        (item.skuSnapshot || item.product?.sku) &&
+                                                            `SKU ${item.skuSnapshot || item.product?.sku}`,
+                                                        `Qty ${item.qty}`,
+                                                        ...(item.selectedOptions || []).map(
+                                                            (option) => `${option.name}: ${option.value}`
+                                                        )
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(" · ")}
+                                                </p>
+                                            </div>
+                                            <p className="shrink-0 font-semibold text-text">
+                                                {formatCurrency(item.lineTotal)}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 

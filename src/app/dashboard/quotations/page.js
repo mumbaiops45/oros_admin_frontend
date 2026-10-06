@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { getQuotations, updateQuotationByAdmin } from "@/api/quotation.api";
+import { getSocket } from "@/lib/socket";
 import Modal from "@/components/ui/Modal";
 import FormField, { inputClass } from "@/components/ui/FormField";
 import Badge from "@/components/ui/Badge";
@@ -26,17 +27,52 @@ const STATUS_OPTIONS = [
 
 const toDateInput = (value) => (value ? String(value).slice(0, 10) : "");
 
+// Product name for a line item, when the backend attached the product
+const itemProductName = (item) =>
+    item?.product && typeof item.product === "object" ? item.product.name : "";
+
+const productNames = (quotation) =>
+    (quotation.items || []).map(itemProductName).filter(Boolean).join(", ");
+
 export default function QuotationsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [quotations, setQuotations] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
+    // Snapshot of the open quotation; the live copy from the list wins so
+    // new customer messages show up while the modal is open
     const [managing, setManaging] = useState(null);
     const [page, setPage] = useState(1);
 
     const [refreshKey, setRefreshKey] = useState(0);
     const reload = () => setRefreshKey((key) => key + 1);
+
+    const openQuotation = (quotation) => {
+        setManaging(quotation);
+        reload();
+    };
+
+    const managingQuotation = managing
+        ? quotations.find((q) => q._id === managing._id) || managing
+        : null;
+
+    // Refresh when a customer messages, uploads, accepts or cancels
+    useEffect(() => {
+        const socket = getSocket();
+
+        const handleNotification = (notification) => {
+            if (String(notification?.type || "").startsWith("QUOTATION")) {
+                setRefreshKey((key) => key + 1);
+            }
+        };
+
+        socket.on("new_notification", handleNotification);
+
+        return () => {
+            socket.off("new_notification", handleNotification);
+        };
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -78,14 +114,9 @@ export default function QuotationsPage() {
 
         let cancelled = false;
 
+        // Always fetch fresh — the list on screen may predate the message
+        // that triggered this notification
         const findAndOpen = async () => {
-            const inCurrentList = quotations.find((q) => q._id === id);
-            if (inCurrentList) {
-                setManaging(inCurrentList);
-                router.replace("/dashboard/quotations");
-                return;
-            }
-
             try {
                 const res = await getQuotations({ limit: 500 });
                 const match = extractList(res?.data, ["quotation", "quotations"]).find(
@@ -94,6 +125,7 @@ export default function QuotationsPage() {
 
                 if (!cancelled && match) {
                     setManaging(match);
+                    reload();
                     router.replace("/dashboard/quotations");
                 }
             } catch {
@@ -106,7 +138,7 @@ export default function QuotationsPage() {
         return () => {
             cancelled = true;
         };
-    }, [searchParams, quotations, router]);
+    }, [searchParams, router]);
 
     return (
         <div>
@@ -169,6 +201,14 @@ export default function QuotationsPage() {
                                             {q.items?.length || 0} · {q.files?.length || "—"}
                                         </p>
                                     </div>
+                                    {productNames(q) && (
+                                        <div className="col-span-2">
+                                            <p className="text-xs font-bold uppercase text-text-muted">
+                                                Products
+                                            </p>
+                                            <p className="text-text">{productNames(q)}</p>
+                                        </div>
+                                    )}
                                     <div className="col-span-2">
                                         <p className="text-xs font-bold uppercase text-text-muted">
                                             Total
@@ -181,7 +221,7 @@ export default function QuotationsPage() {
 
                                 <div className="mt-3 border-t border-border pt-3 text-right">
                                     <button
-                                        onClick={() => setManaging(q)}
+                                        onClick={() => openQuotation(q)}
                                         className="text-xs font-bold text-accent hover:text-accent-dark"
                                     >
                                         Manage
@@ -228,8 +268,13 @@ export default function QuotationsPage() {
                                                 </p>
                                             </td>
                                             <td className="px-5 py-3 text-text">{q.type}</td>
-                                            <td className="px-5 py-3 text-text">
-                                                {q.items?.length || 0}
+                                            <td className="max-w-56 px-5 py-3 text-text">
+                                                <p>{q.items?.length || 0}</p>
+                                                {productNames(q) && (
+                                                    <p className="truncate text-xs text-text-muted" title={productNames(q)}>
+                                                        {productNames(q)}
+                                                    </p>
+                                                )}
                                             </td>
                                             <td className="px-5 py-3 text-text-muted">
                                                 {q.files?.length || "—"}
@@ -242,7 +287,7 @@ export default function QuotationsPage() {
                                             </td>
                                             <td className="px-5 py-3 text-right">
                                                 <button
-                                                    onClick={() => setManaging(q)}
+                                                    onClick={() => openQuotation(q)}
                                                     className="text-xs font-bold text-accent hover:text-accent-dark"
                                                 >
                                                     Manage
@@ -281,9 +326,9 @@ export default function QuotationsPage() {
                 </div>
             )}
 
-            {managing && (
+            {managingQuotation && (
                 <QuotationModal
-                    quotation={managing}
+                    quotation={managingQuotation}
                     onClose={() => setManaging(null)}
                     onSaved={() => {
                         setManaging(null);
@@ -305,6 +350,8 @@ function QuotationModal({ quotation, onClose, onSaved }) {
     const [items, setItems] = useState(
         (quotation.items || []).map((item) => ({
             id: item._id,
+            productName: itemProductName(item),
+            sku: item.product?.sku || "",
             qty: item.qty,
             unitPrice: item.unitPrice ?? 0,
             tax: item.tax ?? 0
@@ -553,11 +600,19 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                 key={item.id}
                                 className="flex flex-wrap items-end gap-3 rounded-xl border border-border p-3"
                             >
-                                <p className="min-w-30 flex-1 text-sm text-text">
-                                    {quotation.type === "CUSTOM"
-                                        ? "Custom item"
-                                        : `Product item${item.qty > 1 ? ` · x${item.qty}` : ""}`}
-                                </p>
+                                <div className="min-w-30 flex-1 text-sm">
+                                    <p className="font-semibold text-text">
+                                        {item.productName ||
+                                            (quotation.type === "CUSTOM"
+                                                ? "Custom item"
+                                                : "Product item")}
+                                    </p>
+                                    <p className="text-xs text-text-muted">
+                                        {[item.sku && `SKU ${item.sku}`, `Qty ${item.qty}`]
+                                            .filter(Boolean)
+                                            .join(" · ")}
+                                    </p>
+                                </div>
                                 <div className="w-28">
                                     <FormField label="Unit price">
                                         <input
