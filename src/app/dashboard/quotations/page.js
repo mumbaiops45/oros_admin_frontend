@@ -31,8 +31,21 @@ const toDateInput = (value) => (value ? String(value).slice(0, 10) : "");
 const itemProductName = (item) =>
     item?.product && typeof item.product === "object" ? item.product.name : "";
 
+// The variant the customer picked, e.g. "Color: Red · Size: L"
+const itemVariant = (item) =>
+    (item?.selectedOptions || [])
+        .map((option) => `${option.name}: ${option.value}`)
+        .join(" · ");
+
 const productNames = (quotation) =>
-    (quotation.items || []).map(itemProductName).filter(Boolean).join(", ");
+    (quotation.items || [])
+        .map((item) => {
+            const name = itemProductName(item);
+            const variant = itemVariant(item);
+            return name && variant ? `${name} (${variant})` : name;
+        })
+        .filter(Boolean)
+        .join(", ");
 
 export default function QuotationsPage() {
     const router = useRouter();
@@ -352,6 +365,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
             id: item._id,
             productName: itemProductName(item),
             sku: item.product?.sku || "",
+            selectedOptions: item.selectedOptions || [],
             qty: item.qty,
             unitPrice: item.unitPrice ?? 0,
             tax: item.tax ?? 0
@@ -612,6 +626,18 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                             .filter(Boolean)
                                             .join(" · ")}
                                     </p>
+                                    {item.selectedOptions.length > 0 && (
+                                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                            {item.selectedOptions.map((option) => (
+                                                <span
+                                                    key={`${option.name}:${option.value}`}
+                                                    className="rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-text"
+                                                >
+                                                    {option.name}: {option.value}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="w-28">
                                     <FormField label="Unit price">
