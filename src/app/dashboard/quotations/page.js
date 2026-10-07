@@ -9,6 +9,7 @@ import { getSocket } from "@/lib/socket";
 import Modal from "@/components/ui/Modal";
 import FormField, { inputClass } from "@/components/ui/FormField";
 import Badge from "@/components/ui/Badge";
+import QuotationFiles from "@/components/admin/QuotationFiles";
 import { extractList } from "@/utils/extractList";
 import { formatCurrency, formatDate } from "@/utils/format";
 
@@ -365,6 +366,8 @@ function QuotationModal({ quotation, onClose, onSaved }) {
             id: item._id,
             productName: itemProductName(item),
             sku: item.product?.sku || "",
+            // A custom quote is only priced per unit when it references a product
+            needsUnitPrice: quotation.type !== "CUSTOM" || Boolean(item.product),
             selectedOptions: item.selectedOptions || [],
             qty: item.qty,
             unitPrice: item.unitPrice ?? 0,
@@ -410,8 +413,12 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                 shippingAddress: isEditingAddress ? address : undefined,
                 items: items.map((item) => ({
                     id: item.id,
-                    unitPrice: Number(item.unitPrice) || 0,
-                    tax: Number(item.tax) || 0
+                    unitPrice: item.needsUnitPrice
+                        ? Number(item.unitPrice) || 0
+                        : undefined,
+                    tax: item.needsUnitPrice
+                        ? Number(item.tax) || 0
+                        : undefined
                 }))
             });
 
@@ -554,6 +561,8 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                 )}
             </div>
 
+            <QuotationFiles files={quotation.files} />
+
             {quotation.messages?.length > 0 && (
                 <div className="mb-5 rounded-xl border border-border p-4">
                     <p className="mb-3 text-xs font-bold uppercase tracking-wide text-text-muted">
@@ -622,7 +631,12 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                                 : "Product item")}
                                     </p>
                                     <p className="text-xs text-text-muted">
-                                        {[item.sku && `SKU ${item.sku}`, `Qty ${item.qty}`]
+                                        {[
+                                            item.sku && `SKU ${item.sku}`,
+                                            // Custom quotes only carry a quantity for a reference product;
+                                            // otherwise it is stated in the requirements
+                                            item.needsUnitPrice && `Qty ${item.qty}`
+                                        ]
                                             .filter(Boolean)
                                             .join(" · ")}
                                     </p>
@@ -639,6 +653,7 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                         </div>
                                     )}
                                 </div>
+                                {item.needsUnitPrice && (
                                 <div className="w-28">
                                     <FormField label="Unit price">
                                         <input
@@ -652,6 +667,8 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                         />
                                     </FormField>
                                 </div>
+                                )}
+                                {item.needsUnitPrice && (
                                 <div className="w-24">
                                     <FormField label="Tax">
                                         <input
@@ -665,10 +682,17 @@ function QuotationModal({ quotation, onClose, onSaved }) {
                                         />
                                     </FormField>
                                 </div>
+                                )}
                                 <p className="text-xs text-text-muted">
-                                    Computed line subtotal:{" "}
-                                    {formatCurrency(
-                                        (Number(item.unitPrice) || 0) * item.qty
+                                    {item.needsUnitPrice ? (
+                                        <>
+                                            Computed line subtotal:{" "}
+                                            {formatCurrency(
+                                                (Number(item.unitPrice) || 0) * item.qty
+                                            )}
+                                        </>
+                                    ) : (
+                                        "No reference product — price it with the sub total below."
                                     )}
                                 </p>
                             </div>

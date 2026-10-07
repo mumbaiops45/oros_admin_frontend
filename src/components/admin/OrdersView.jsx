@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 
 import { getAdminOrders, updateOrderStatus } from "@/api/order.api";
 import Modal from "@/components/ui/Modal";
@@ -51,6 +52,28 @@ const SOURCE_TONE = {
     STORE: "store",
     MANUAL: "dark"
 };
+
+// The quotation an order was raised from — populated or a bare id
+const quotationIdOf = (order) =>
+    order?.quotation && typeof order.quotation === "object"
+        ? order.quotation._id
+        : order?.quotation || null;
+
+// Jumps to the quotations page, which opens the quotation from ?id=
+function SeeQuotationLink({ order }) {
+    const id = quotationIdOf(order);
+    if (!id) return null;
+
+    return (
+        <Link
+            href={`/dashboard/quotations?id=${id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/10"
+        >
+            <FileText size={12} /> See quotation
+        </Link>
+    );
+}
 
 export default function OrdersView({
     userId = "",
@@ -312,6 +335,7 @@ export default function OrdersView({
                                                 {order.quotation.refNumber}
                                             </Badge>
                                         )}
+                                    <SeeQuotationLink order={order} />
                                 </div>
 
                                 <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-sm">
@@ -436,6 +460,9 @@ export default function OrdersView({
                                                                 }
                                                             </Badge>
                                                         )}
+                                                    <div className="mt-1">
+                                                        <SeeQuotationLink order={order} />
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-5 py-3">
@@ -598,6 +625,18 @@ export default function OrdersView({
                                 </p>
                             </div>
                         </div>
+
+                        {quotationIdOf(viewing) && (
+                            <div className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
+                                <p className="text-text-muted">
+                                    Raised from quotation{" "}
+                                    <span className="font-semibold text-text">
+                                        {viewing.quotation?.refNumber || ""}
+                                    </span>
+                                </p>
+                                <SeeQuotationLink order={viewing} />
+                            </div>
+                        )}
 
                         <div>
                             <p className="mb-1 text-xs font-bold uppercase text-text-muted">
