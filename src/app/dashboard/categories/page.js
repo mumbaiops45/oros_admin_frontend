@@ -31,6 +31,8 @@ export default function CategoriesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [page, setPage] = useState(1);
+    // From the API's totalPage; 0 until the first page loads
+    const [totalPages, setTotalPages] = useState(0);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -50,10 +52,16 @@ export default function CategoriesPage() {
             setError("");
 
             try {
-                const res = await getCategories({ limit: 1000 });
+                const res = await getCategories({ page, limit: PAGE_SIZE });
                 if (!cancelled) {
+                    const pages = Number(res?.data?.totalPage) || 0;
                     setCategories(extractList(res?.data, ["categories", "category"]));
-                    setPage(1);
+                    setTotalPages(pages);
+
+                    // A delete can empty the last page — step back to the new last one
+                    if (pages > 0 && page > pages) {
+                        setPage(pages);
+                    }
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -71,7 +79,7 @@ export default function CategoriesPage() {
         return () => {
             cancelled = true;
         };
-    }, [refreshKey]);
+    }, [page, refreshKey]);
 
     const openCreate = () => {
         setEditing(null);
@@ -152,7 +160,8 @@ export default function CategoriesPage() {
         }
     };
 
-    const pageRows = categories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    // The API already returns just this page
+    const pageRows = categories;
 
     return (
         <div>
@@ -168,7 +177,7 @@ export default function CategoriesPage() {
                 </button>
             </div>
 
-            {isLoading && (
+            {isLoading && categories.length === 0 && (
                 <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
                     Loading...
                 </div>
@@ -186,8 +195,14 @@ export default function CategoriesPage() {
                 </div>
             )}
 
-            {!isLoading && !error && categories.length > 0 && (
-                <>
+            {!error && categories.length > 0 && (
+                // The previous page stays visible, dimmed, until the next one arrives
+                <div
+                    aria-busy={isLoading}
+                    className={`transition-opacity duration-200 ${
+                        isLoading ? "pointer-events-none opacity-50" : "opacity-100"
+                    }`}
+                >
                     {/* Mobile: one card per category */}
                     <div className="space-y-3 md:hidden">
                         {pageRows.map((category) => (
@@ -297,14 +312,16 @@ export default function CategoriesPage() {
                             </table>
                         </div>
                     </div>
-                </>
+                </div>
             )}
 
-            {!isLoading && !error && categories.length > PAGE_SIZE && (
+            {!error && totalPages > 1 && (
                 <div className="mt-3 rounded-2xl border border-border bg-card">
                     <Pager
                         page={page}
-                        hasNext={page * PAGE_SIZE < categories.length}
+                        totalPages={totalPages}
+                        hasNext={page < totalPages}
+                        disabled={isLoading}
                         onPrev={() => setPage((p) => Math.max(1, p - 1))}
                         onNext={() => setPage((p) => p + 1)}
                     />

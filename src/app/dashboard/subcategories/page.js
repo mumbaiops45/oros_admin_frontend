@@ -33,6 +33,10 @@ export default function SubcategoriesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [page, setPage] = useState(1);
+    // From the API's totalPage; 0 until the first page loads
+    const [totalPages, setTotalPages] = useState(0);
+    // Category filter; "" shows every subcategory
+    const [categoryFilter, setCategoryFilter] = useState("");
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -53,18 +57,28 @@ export default function SubcategoriesPage() {
 
             try {
                 const [subRes, catRes] = await Promise.all([
-                    getSubCategories({ limit: 1000 }),
+                    getSubCategories({
+                        page,
+                        limit: PAGE_SIZE,
+                        category: categoryFilter || undefined
+                    }),
                     getCategories({ limit: 1000 })
                 ]);
 
                 if (!cancelled) {
+                    const pages = Number(subRes?.data?.totalPage) || 0;
+                    setTotalPages(pages);
                     setSubCategories(
                         extractList(subRes?.data, ["subCategories", "subCategory"])
                     );
                     setCategories(
                         extractList(catRes?.data, ["categories", "category"])
                     );
-                    setPage(1);
+
+                    // A delete can empty the last page — step back to the new last one
+                    if (pages > 0 && page > pages) {
+                        setPage(pages);
+                    }
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -82,7 +96,7 @@ export default function SubcategoriesPage() {
         return () => {
             cancelled = true;
         };
-    }, [refreshKey]);
+    }, [page, categoryFilter, refreshKey]);
 
     const categoryName = (value) => {
         if (!value) return "—";
@@ -177,13 +191,31 @@ export default function SubcategoriesPage() {
         }
     };
 
-    const pageRows = subCategories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    // The API already returns just this page
+    const pageRows = subCategories;
 
     return (
         <div>
             <CategoryTabs />
 
-            <div className="mb-5 flex items-center justify-end">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <select
+                    value={categoryFilter}
+                    onChange={(e) => {
+                        setCategoryFilter(e.target.value);
+                        setPage(1);
+                    }}
+                    aria-label="Filter by category"
+                    className={`${inputClass} w-full sm:w-64`}
+                >
+                    <option value="">All categories</option>
+                    {categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                            {category.name}
+                        </option>
+                    ))}
+                </select>
+
                 <button
                     onClick={openCreate}
                     className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-dark"
@@ -193,7 +225,7 @@ export default function SubcategoriesPage() {
                 </button>
             </div>
 
-            {isLoading && (
+            {isLoading && subCategories.length === 0 && (
                 <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
                     Loading...
                 </div>
@@ -207,12 +239,20 @@ export default function SubcategoriesPage() {
 
             {!isLoading && !error && subCategories.length === 0 && (
                 <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
-                    No subcategories yet
+                    {categoryFilter
+                        ? "No subcategories in this category"
+                        : "No subcategories yet"}
                 </div>
             )}
 
-            {!isLoading && !error && subCategories.length > 0 && (
-                <>
+            {!error && subCategories.length > 0 && (
+                // The previous page stays visible, dimmed, until the next one arrives
+                <div
+                    aria-busy={isLoading}
+                    className={`transition-opacity duration-200 ${
+                        isLoading ? "pointer-events-none opacity-50" : "opacity-100"
+                    }`}
+                >
                     {/* Mobile: one card per subcategory */}
                     <div className="space-y-3 md:hidden">
                         {pageRows.map((sub) => (
@@ -321,14 +361,16 @@ export default function SubcategoriesPage() {
                             </table>
                         </div>
                     </div>
-                </>
+                </div>
             )}
 
-            {!isLoading && !error && subCategories.length > PAGE_SIZE && (
+            {!error && totalPages > 1 && (
                 <div className="mt-3 rounded-2xl border border-border bg-card">
                     <Pager
                         page={page}
-                        hasNext={page * PAGE_SIZE < subCategories.length}
+                        totalPages={totalPages}
+                        hasNext={page < totalPages}
+                        disabled={isLoading}
                         onPrev={() => setPage((p) => Math.max(1, p - 1))}
                         onNext={() => setPage((p) => p + 1)}
                     />

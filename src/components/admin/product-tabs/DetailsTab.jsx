@@ -43,8 +43,9 @@ export default function DetailsTab({ product, onSaved }) {
         const load = async () => {
             try {
                 const [catRes, subRes] = await Promise.all([
-                    getCategories(),
-                    getSubCategories()
+                    // The category API pages by default; the picker needs them all
+                    getCategories({ limit: 1000 }),
+                    getSubCategories({ limit: 1000 })
                 ]);
 
                 setCategories(extractList(catRes?.data, ["categories", "category"]));

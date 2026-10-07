@@ -39,6 +39,8 @@ export default function ProductsPage() {
     const [editingProduct, setEditingProduct] = useState(null);
     const [isBulkOpen, setIsBulkOpen] = useState(false);
     const [page, setPage] = useState(1);
+    // From the API's pagination block; 0 until the first page loads
+    const [totalPages, setTotalPages] = useState(0);
 
     const [categories, setCategories] = useState([]);
     const [subCategories, setSubCategories] = useState([]);
@@ -133,6 +135,8 @@ export default function ProductsPage() {
                 const res = await getProducts(params);
                 if (!cancelled) {
                     setProducts(extractList(res?.data, ["products", "product"]));
+                    const pagination = res?.data?.pagination;
+                    setTotalPages(pagination?.totalPages || 0);
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -282,7 +286,7 @@ export default function ProductsPage() {
                 )}
             </div>
 
-            {isLoading && (
+            {isLoading && products.length === 0 && (
                 <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center text-text-muted">
                     Loading...
                 </div>
@@ -300,8 +304,14 @@ export default function ProductsPage() {
                 </div>
             )}
 
-            {!isLoading && !error && products.length > 0 && (
-                <>
+            {!error && products.length > 0 && (
+                // The previous page stays visible, dimmed, until the next one arrives
+                <div
+                    aria-busy={isLoading}
+                    className={`transition-opacity duration-200 ${
+                        isLoading ? "pointer-events-none opacity-50" : "opacity-100"
+                    }`}
+                >
                     {/* Mobile: one card per product */}
                     <div className="space-y-3 md:hidden">
                         {products.map((product) => (
@@ -433,16 +443,18 @@ export default function ProductsPage() {
                             </table>
                         </div>
                     </div>
-                </>
+                </div>
             )}
 
-            {!isLoading && !error && (
+            {!error && !(isLoading && products.length === 0) && (
                 <div className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3">
-                    <p className="text-xs text-text-muted">Page {page}</p>
+                    <p className="text-xs text-text-muted">
+                        Page {page} of {Math.max(totalPages, 1)}
+                    </p>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            disabled={page === 1}
+                            disabled={page === 1 || isLoading}
                             className="flex items-center gap-1 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold text-text disabled:opacity-40"
                         >
                             <ChevronLeft size={14} />
@@ -450,7 +462,12 @@ export default function ProductsPage() {
                         </button>
                         <button
                             onClick={() => setPage((p) => p + 1)}
-                            disabled={products.length < PAGE_SIZE}
+                            disabled={
+                                isLoading ||
+                                (totalPages
+                                    ? page >= totalPages
+                                    : products.length < PAGE_SIZE)
+                            }
                             className="flex items-center gap-1 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold text-text disabled:opacity-40"
                         >
                             Next
