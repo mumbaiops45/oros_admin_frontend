@@ -52,7 +52,12 @@ const SOURCE_TONE = {
     MANUAL: "dark"
 };
 
-export default function OrdersView({ userId = "", customerName = "", customer = null, onBack }) {
+export default function OrdersView({
+    userId = "",
+    customerName = "",
+    customer = null,
+    onBack
+}) {
     const displayName = customer?.name || customerName || "Customer";
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -83,9 +88,7 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                 });
                 if (!cancelled) {
                     setOrders(extractList(res?.data, ["orders", "order"]));
-                    setTotalPages(
-                        Math.max(1, res?.data?.pagination?.totalPages || 1)
-                    );
+                    setTotalPages(Math.max(1, res?.data?.pagination?.totalPages || 1));
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -127,7 +130,11 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
 
     // The select stays on the old status until the admin confirms
     const requestStatusChange = (order, status) => {
-        if (status === order.status || order.status === "COMPLETED") {
+        if (
+            status === order.status ||
+            order.status === "COMPLETED" ||
+            order.status === "CANCELLED"
+        ) {
             return;
         }
 
@@ -159,8 +166,7 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
 
     const itemCount = (order) => orderItems(order).length;
 
-    const itemName = (item) =>
-        item.nameSnapshot || item.product?.name || "Product";
+    const itemName = (item) => item.nameSnapshot || item.product?.name || "Product";
 
     const itemNames = (order) => orderItems(order).map(itemName).join(", ");
 
@@ -193,13 +199,17 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                             </p>
                             {customer?.phone && (
                                 <p className="text-sm text-text-muted">
-                                    <span className="font-semibold text-text">Phone:</span>{" "}
+                                    <span className="font-semibold text-text">
+                                        Phone:
+                                    </span>{" "}
                                     {customer.phone}
                                 </p>
                             )}
                             {customer?.email && (
                                 <p className="truncate text-sm text-text-muted">
-                                    <span className="font-semibold text-text">Email:</span>{" "}
+                                    <span className="font-semibold text-text">
+                                        Email:
+                                    </span>{" "}
                                     {customer.email}
                                 </p>
                             )}
@@ -292,7 +302,9 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                     </Badge>
                                     {typeof order.quotation === "object" &&
                                         order.quotation?.type && (
-                                            <Badge tone="solid">{order.quotation.type}</Badge>
+                                            <Badge tone="solid">
+                                                {order.quotation.type}
+                                            </Badge>
                                         )}
                                     {typeof order.quotation === "object" &&
                                         order.quotation?.refNumber && (
@@ -328,7 +340,9 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                             <p className="text-xs font-bold uppercase text-text-muted">
                                                 Products
                                             </p>
-                                            <p className="text-text">{itemNames(order)}</p>
+                                            <p className="text-text">
+                                                {itemNames(order)}
+                                            </p>
                                         </div>
                                     )}
                                 </div>
@@ -337,23 +351,27 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                     <p className="mb-1.5 text-xs font-bold uppercase text-text-muted">
                                         Order status
                                     </p>
-                                    <select
-                                        value={order.status}
-                                        disabled={
-                                            updatingId === order._id ||
-                                            order.status === "COMPLETED"
-                                        }
-                                        onChange={(e) =>
-                                            requestStatusChange(order, e.target.value)
-                                        }
-                                        className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                        {STATUS_OPTIONS.map((status) => (
-                                            <option key={status} value={status}>
-                                                {status}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    {order.status === "CANCELLED" ? (
+                                        <Badge tone="danger">CANCELLED</Badge>
+                                    ) : (
+                                        <select
+                                            value={order.status}
+                                            disabled={
+                                                updatingId === order._id ||
+                                                order.status === "COMPLETED"
+                                            }
+                                            onChange={(e) =>
+                                                requestStatusChange(order, e.target.value)
+                                            }
+                                            className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            {STATUS_OPTIONS.map((status) => (
+                                                <option key={status} value={status}>
+                                                    {status}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -391,20 +409,31 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                             <td className="px-5 py-3">
                                                 <div className="flex flex-col items-start gap-1.5">
                                                     <div className="flex flex-wrap gap-1.5">
-                                                        <Badge tone={SOURCE_TONE[order.source] || "neutral"}>
+                                                        <Badge
+                                                            tone={
+                                                                SOURCE_TONE[
+                                                                    order.source
+                                                                ] || "neutral"
+                                                            }
+                                                        >
                                                             {order.source}
                                                         </Badge>
-                                                        {typeof order.quotation === "object" &&
+                                                        {typeof order.quotation ===
+                                                            "object" &&
                                                             order.quotation?.type && (
                                                                 <Badge tone="solid">
                                                                     {order.quotation.type}
                                                                 </Badge>
                                                             )}
                                                     </div>
-                                                    {typeof order.quotation === "object" &&
+                                                    {typeof order.quotation ===
+                                                        "object" &&
                                                         order.quotation?.refNumber && (
                                                             <Badge tone="outline">
-                                                                {order.quotation.refNumber}
+                                                                {
+                                                                    order.quotation
+                                                                        .refNumber
+                                                                }
                                                             </Badge>
                                                         )}
                                                 </div>
@@ -432,23 +461,33 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                                 {formatCurrency(order.pricing?.total)}
                                             </td>
                                             <td className="px-5 py-3">
-                                                <select
-                                                    value={order.status}
-                                                    disabled={
-                                                        updatingId === order._id ||
-                                                        order.status === "COMPLETED"
-                                                    }
-                                                    onChange={(e) =>
-                                                        requestStatusChange(order, e.target.value)
-                                                    }
-                                                    className="rounded-lg border border-border bg-white px-2 py-1.5 text-xs font-semibold text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-                                                >
-                                                    {STATUS_OPTIONS.map((status) => (
-                                                        <option key={status} value={status}>
-                                                            {status}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                {order.status === "CANCELLED" ? (
+                                                    <Badge tone="danger">CANCELLED</Badge>
+                                                ) : (
+                                                    <select
+                                                        value={order.status}
+                                                        disabled={
+                                                            updatingId === order._id ||
+                                                            order.status === "COMPLETED"
+                                                        }
+                                                        onChange={(e) =>
+                                                            requestStatusChange(
+                                                                order,
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        className="rounded-lg border border-border bg-white px-2 py-1.5 text-xs font-semibold text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                                                    >
+                                                        {STATUS_OPTIONS.map((status) => (
+                                                            <option
+                                                                key={status}
+                                                                value={status}
+                                                            >
+                                                                {status}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                )}
                                             </td>
                                             <td className="px-5 py-3 text-right">
                                                 <button
@@ -502,11 +541,10 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                             <span className="font-semibold text-text">
                                 {pendingStatus.order.status}
                             </span>{" "}
-                            to{" "}
-                            <span className="font-semibold text-text">COMPLETED</span>.
+                            to <span className="font-semibold text-text">COMPLETED</span>.
                             <span className="mt-3 block rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-600">
-                                Once an order is completed, its status cannot be
-                                changed again.
+                                Once an order is completed, its status cannot be changed
+                                again.
                             </span>
                         </>
                     }
@@ -555,7 +593,9 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                 <p className="text-xs font-bold uppercase text-text-muted">
                                     Source
                                 </p>
-                                <p className="font-semibold text-text">{viewing.source}</p>
+                                <p className="font-semibold text-text">
+                                    {viewing.source}
+                                </p>
                             </div>
                         </div>
 
@@ -604,11 +644,15 @@ export default function OrdersView({ userId = "", customerName = "", customer = 
                                                 </p>
                                                 <p className="text-xs text-text-muted">
                                                     {[
-                                                        (item.skuSnapshot || item.product?.sku) &&
+                                                        (item.skuSnapshot ||
+                                                            item.product?.sku) &&
                                                             `SKU ${item.skuSnapshot || item.product?.sku}`,
                                                         `Qty ${item.qty}`,
-                                                        ...(item.selectedOptions || []).map(
-                                                            (option) => `${option.name}: ${option.value}`
+                                                        ...(
+                                                            item.selectedOptions || []
+                                                        ).map(
+                                                            (option) =>
+                                                                `${option.name}: ${option.value}`
                                                         )
                                                     ]
                                                         .filter(Boolean)
