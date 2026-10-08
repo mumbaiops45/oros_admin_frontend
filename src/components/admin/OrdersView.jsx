@@ -68,7 +68,7 @@ function SeeQuotationLink({ order }) {
         <Link
             href={`/dashboard/quotations?id=${id}`}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/10"
+            className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-border px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/10"
         >
             <FileText size={12} /> See quotation
         </Link>
@@ -463,6 +463,7 @@ export default function OrdersView({
                                                     <div className="mt-1">
                                                         <SeeQuotationLink order={order} />
                                                     </div>
+
                                                 </div>
                                             </td>
                                             <td className="px-5 py-3">
