@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 
 import { getUsers, createUser } from "@/api/user.api";
-import { getProducts } from "@/api/product.api";
+import { getProducts, getProductOptions, getOptionValues } from "@/api/product.api";
 import { createManualOrder } from "@/api/order.api";
 import Modal from "@/components/ui/Modal";
 import FormField, { inputClass } from "@/components/ui/FormField";
@@ -21,7 +21,10 @@ export default function ManualOrderPage() {
     const [products, setProducts] = useState([]);
     const [customerId, setCustomerId] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("Cash");
-    const [items, setItems] = useState([{ productId: "", qty: 1 }]);
+    // selections maps optionId -> valueId for the line's product
+    const [items, setItems] = useState([{ productId: "", qty: 1, selections: {} }]);
+    // productId -> [{ ...option, values }], fetched the first time a product is picked
+    const [optionsByProduct, setOptionsByProduct] = useState({});
     const [note, setNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -81,8 +84,65 @@ export default function ManualOrderPage() {
         );
     };
 
+    // Only options with stored values can be priced by the server, so
+    // free-form TEXT / FILE options are left out of the manual order
+    const loadProductOptions = async (productId) => {
+        if (!productId || optionsByProduct[productId]) return;
+
+        try {
+            const res = await getProductOptions(productId);
+            const list = extractList(res?.data, ["options", "option"]);
+            const withValues = await Promise.all(
+                list.map(async (option) => {
+                    const valRes = await getOptionValues(option._id);
+                    return {
+                        ...option,
+                        values: extractList(valRes?.data, ["values", "value"])
+                    };
+                })
+            );
+
+            setOptionsByProduct((prev) => ({
+                ...prev,
+                [productId]: withValues.filter((option) => option.values.length > 0)
+            }));
+        } catch {
+            setOptionsByProduct((prev) => ({ ...prev, [productId]: [] }));
+        }
+    };
+
+    const selectProduct = (index, productId) => {
+        setItems((prev) =>
+            prev.map((item, i) =>
+                i === index ? { ...item, productId, selections: {} } : item
+            )
+        );
+        loadProductOptions(productId);
+    };
+
+    const selectOption = (index, optionId, valueId) => {
+        setItems((prev) =>
+            prev.map((item, i) =>
+                i === index
+                    ? { ...item, selections: { ...item.selections, [optionId]: valueId } }
+                    : item
+            )
+        );
+    };
+
+    const optionsFor = (item) => optionsByProduct[item.productId] || [];
+
+    // The chosen { option, value } pairs, in the product's option order
+    const chosenOptions = (item) =>
+        optionsFor(item)
+            .map((option) => ({
+                option,
+                value: option.values.find((v) => v._id === item.selections?.[option._id])
+            }))
+            .filter((pair) => pair.value);
+
     const addLine = () => {
-        setItems((prev) => [...prev, { productId: "", qty: 1 }]);
+        setItems((prev) => [...prev, { productId: "", qty: 1, selections: {} }]);
     };
 
     const removeLine = (index) => {
@@ -92,7 +152,15 @@ export default function ManualOrderPage() {
     const getLinePrice = (item) => {
         const product = products.find((p) => p._id === item.productId);
 
-        return product ? Number(product.basePrice) || 0 : null;
+        if (!product) return null;
+
+        // Same rule as the server: add each value's delta, then apply its multiplier
+        return chosenOptions(item).reduce(
+            (price, { value }) =>
+                (price + (Number(value.priceDelta) || 0)) *
+                (Number(value.priceMultiplier) || 1),
+            Number(product.basePrice) || 0
+        );
     };
 
     const estimatedSubtotal = items.reduce(
@@ -146,6 +214,20 @@ export default function ManualOrderPage() {
             return;
         }
 
+        for (const item of validItems) {
+            const missing = optionsFor(item).filter(
+                (option) => option.isRequired && !item.selections?.[option._id]
+            );
+
+            if (missing.length > 0) {
+                const product = products.find((p) => p._id === item.productId);
+                setError(
+                    `Choose ${missing.map((o) => o.name).join(", ")} for ${product?.name || "this product"}`
+                );
+                return;
+            }
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -154,7 +236,11 @@ export default function ManualOrderPage() {
                 paymentMethod: paymentMethod.toUpperCase(),
                 items: validItems.map((item) => ({
                     product: item.productId,
-                    qty: Number(item.qty)
+                    qty: Number(item.qty),
+                    selectedOptions: chosenOptions(item).map(({ option, value }) => ({
+                        name: option.name,
+                        value: value.value
+                    }))
                 })),
                 note
             });
@@ -214,13 +300,12 @@ export default function ManualOrderPage() {
 
                     <div className="space-y-2">
                         {items.map((item, index) => (
-                            <div key={index} className="flex flex-wrap items-center gap-2">
+                            <div key={index} className="space-y-2 rounded-xl border border-border p-3">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <select
                                     className={`${inputClass} min-w-0 flex-1`}
                                     value={item.productId}
-                                    onChange={(e) =>
-                                        updateItem(index, "productId", e.target.value)
-                                    }
+                                    onChange={(e) => selectProduct(index, e.target.value)}
                                 >
                                     <option value="">Select product...</option>
                                     {products.map((product) => (
@@ -259,6 +344,41 @@ export default function ManualOrderPage() {
                                 >
                                     <Trash2 size={14} />
                                 </button>
+                            </div>
+
+                            {optionsFor(item).length > 0 && (
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                    {optionsFor(item).map((option) => (
+                                        <label key={option._id} className="text-xs font-semibold text-text-muted">
+                                            {option.name}
+                                            {option.isRequired && <span className="text-red-500"> *</span>}
+                                            <select
+                                                className={`${inputClass} mt-1`}
+                                                value={item.selections?.[option._id] || ""}
+                                                onChange={(e) =>
+                                                    selectOption(index, option._id, e.target.value)
+                                                }
+                                            >
+                                                <option value="">
+                                                    {option.isRequired ? "Choose..." : "None"}
+                                                </option>
+                                                {option.values.map((value) => (
+                                                    <option key={value._id} value={value._id}>
+                                                        {value.value}
+                                                        {Number(value.priceDelta)
+                                                            ? ` (+${formatCurrency(value.priceDelta)})`
+                                                            : ""}
+                                                        {Number(value.priceMultiplier) &&
+                                                        Number(value.priceMultiplier) !== 1
+                                                            ? ` (×${value.priceMultiplier})`
+                                                            : ""}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
                             </div>
                         ))}
                     </div>
