@@ -47,6 +47,19 @@ const STATUS_TONE = {
     IN_PRODUCTION: "primary"
 };
 
+const PAYMENT_TONE = {
+    PAID: "success",
+    PENDING: "warning",
+    FAILED: "danger",
+    REFUNDED: "neutral"
+};
+
+// payment.status from the order; older orders may not carry one
+const PaymentBadge = ({ order }) => {
+    const status = order?.payment?.status || "PENDING";
+    return <Badge tone={PAYMENT_TONE[status] || "neutral"}>{status}</Badge>;
+};
+
 const SOURCE_TONE = {
     QUOTATION: "quotation",
     STORE: "store",
@@ -371,6 +384,13 @@ export default function OrdersView({
                                     )}
                                 </div>
 
+                                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                                    <p className="text-xs font-bold uppercase text-text-muted">
+                                        Payment
+                                    </p>
+                                    <PaymentBadge order={order} />
+                                </div>
+
                                 <div className="mt-3 border-t border-border pt-3">
                                     <p className="mb-1.5 text-xs font-bold uppercase text-text-muted">
                                         Order status
@@ -412,6 +432,7 @@ export default function OrdersView({
                                         <th className="px-5 py-3">Customer</th>
                                         <th className="px-5 py-3">Items</th>
                                         <th className="px-5 py-3">Total</th>
+                                        <th className="px-5 py-3">Payment</th>
                                         <th className="px-5 py-3">Order status</th>
                                         <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
@@ -487,6 +508,9 @@ export default function OrdersView({
                                             </td>
                                             <td className="px-5 py-3 font-semibold text-text">
                                                 {formatCurrency(order.pricing?.total)}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <PaymentBadge order={order} />
                                             </td>
                                             <td className="px-5 py-3">
                                                 {order.status === "CANCELLED" ? (
@@ -625,6 +649,35 @@ export default function OrdersView({
                                     {viewing.source}
                                 </p>
                             </div>
+                        </div>
+
+                        <div className="rounded-xl border border-border p-3">
+                            <div className="mb-2 flex items-center justify-between">
+                                <p className="text-xs font-bold uppercase text-text-muted">
+                                    Payment
+                                </p>
+                                <PaymentBadge order={viewing} />
+                            </div>
+                            <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                                {[
+                                    ["Method", viewing.payment?.method],
+                                    ["Provider", viewing.payment?.provider],
+                                    ["Payment order ID", viewing.payment?.paymentOrderId],
+                                    ["Transaction ID", viewing.payment?.transactionId],
+                                    [
+                                        "Paid at",
+                                        viewing.payment?.paidAt &&
+                                            formatDate(viewing.payment.paidAt)
+                                    ]
+                                ].map(([label, value]) => (
+                                    <div key={label} className="min-w-0">
+                                        <dt className="text-text-muted">{label}</dt>
+                                        <dd className="truncate font-semibold text-text" title={value || ""}>
+                                            {value || "—"}
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
                         </div>
 
                         {quotationIdOf(viewing) && (
