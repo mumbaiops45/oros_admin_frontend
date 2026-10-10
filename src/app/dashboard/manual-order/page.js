@@ -25,7 +25,6 @@ export default function ManualOrderPage() {
     const [items, setItems] = useState([{ productId: "", qty: 1, selections: {} }]);
     // productId -> [{ ...option, values }], fetched the first time a product is picked
     const [optionsByProduct, setOptionsByProduct] = useState({});
-    const [note, setNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
 
@@ -241,8 +240,7 @@ export default function ManualOrderPage() {
                         name: option.name,
                         value: value.value
                     }))
-                })),
-                note
+                }))
             });
 
             router.push("/dashboard/orders");
@@ -397,14 +395,6 @@ export default function ManualOrderPage() {
                         </p>
                     )}
                 </div>
-
-                <FormField label="Note">
-                    <textarea
-                        className={`${inputClass} min-h-20 resize-y`}
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                    />
-                </FormField>
 
                 {error && (
                     <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
